@@ -14,14 +14,19 @@ logger = logging.getLogger("django.server")
 router = Router(tags=["auth_user"])
 
 class UserSignUpSchema(Schema, BaseModel):
-    user_email: str = Field(..., alias="user_email")
+    user_email: str = Field("", alias="user_email", pattern=r"^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$")
     user_nick: str =Field(..., alias="user_nick")
-    # user_email: str = Field(..., regex=r"^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$")
     user_password: str = Field(..., alias="user_password")
+    user_fcm: str = Field(..., alias="use_fcm")
+    user_social_id: str = Field(..., alias="user_social_id")
+    user_social_type: str = Field(..., alias="user_social_type")
 
 class UserLoginSchema(Schema, BaseModel):
    user_email: str = Field(..., alias="user_email")
    user_password: str = Field(..., alias="user_password")
+   user_fcm: str = Field(..., alias="use_fcm")
+   user_social_id: str = Field(..., alias="user_social_id")
+   user_social_type: str = Field(..., alias="user_social_type")
    
 @router.post("/signup",
              response={200: HttpResp, 409: HttpResp, 500: HttpResp}, 
