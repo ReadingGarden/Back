@@ -14,6 +14,9 @@ class User(AuthBase, UtilModel):
     user_nick = Column(String(30), nullable=False, default='')
     user_email = Column(String(300), nullable=False)
     user_password = Column(Text, nullable=False)
+    user_fcm = Column(Text, nullable=True)
+    user_social_id = Column(String(100), nullable=False, default='')
+    user_social_type = Column(String(30), nullable=False, default='')
     user_image = Column(String(30), nullable=False, default='image1')
     user_created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
