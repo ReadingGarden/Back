@@ -20,6 +20,13 @@ class AuthService:
         유저 회원가입
         """
         try:
+            # 소셜 가입 중복 확인
+            if (
+                session.query(User)
+                .filter(User.user_social_id == payload["user_social_id"], User.user_social_type == payload["user_social_type"])
+                .first()
+            ):
+                return HttpResp(resp_code=409, resp_msg="소셜 아이디 중복")
             # 이메일 중복 확인
             if (
                 session.query(User)
@@ -60,17 +67,24 @@ class AuthService:
         try:
             ph = PasswordHasher()
             # user_email, user_password = payload['user_email'], payload['user_password']
-            
-            if not (
-                user_instance := session.query(User)
-                .filter(User.user_email == payload['user_email'])
-                .first()
-            ):
-                return HttpResp(resp_code=400, resp_msg="존재하지 않는 이메일")
-            if not (
-                user_instance.user_password == payload['user_password']
-            ):
-                return HttpResp(resp_code=400, resp_msg="비밀번호가 일치하지 않습니다.")
+            if payload['user_social_id']:
+                if not (
+                    user_instance := session.query(User)
+                    .filter(User.user_social_id == payload['user_social_id'], User.user_social_type == payload['user_social_type'])
+                    .first()
+                ):
+                    return HttpResp(resp_code=400, resp_msg="존재하지 않는 소셜")
+            else:
+                if not (
+                    user_instance := session.query(User)
+                    .filter(User.user_email == payload['user_email'])
+                    .first()
+                ):
+                    return HttpResp(resp_code=400, resp_msg="존재하지 않는 이메일")
+                if not (
+                    user_instance.user_password == payload['user_password']
+                ):
+                    return HttpResp(resp_code=400, resp_msg="비밀번호가 일치하지 않습니다.")
             #TODO - 비밀번호 암호화
             # ph.verify(user_instance.user_password, payload['user_password'])
             
