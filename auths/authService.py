@@ -5,8 +5,9 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
 from auths.models import User
+from book import settings
 from cores.schema import DataResp, HttpResp, ServiceError
-from cores.utils import GenericPayload, session_wrapper
+from cores.utils import GenericPayload, send_email, session_wrapper
 from auths.tokenService import token_service
 
 
@@ -124,6 +125,30 @@ class AuthService:
             logger.error(e)
             raise e
 
-        
+    @session_wrapper
+    def user_find_password(
+        self, session, payload: GenericPayload
+    ):
+        """
+        유저 비밀번호 인증 메일 전송
+        """
+        try:
+            if not (
+                user_instance := session.query(User)
+                .filter(User.user_email == payload['user_email'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="존재하지 않는 이메일")
+            try:
+            # TODO: 메일 전송
+                send_email(email="ella@acryl.ai", title='test', content='test')
+                pass
+            except:
+                return HttpResp(resp_code=403, resp_msg="메일 전송 실패")
+        except Exception as e:
+            logger.error(e)
+            raise e
 
+
+    
 auth_service = AuthService()

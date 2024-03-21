@@ -27,6 +27,9 @@ class UserLoginSchema(Schema, BaseModel):
    user_fcm: str = Field(..., alias="use_fcm")
    user_social_id: str = Field(..., alias="user_social_id")
    user_social_type: str = Field(..., alias="user_social_type")
+
+class UserEmailSchema(Schema, BaseModel):
+    user_email: str = Field(..., alias="user_email")
    
 @router.post("/signup",
              response={200: HttpResp, 409: HttpResp, 500: HttpResp}, 
@@ -53,7 +56,7 @@ def login(request, form: UserLoginSchema):
 @router.get(
     "/user",
     auth=UserAuth(),
-    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    response={200: DataResp, 400: HttpResp, 500: HttpResp},
     summary="유저 정보 조회"
 )
 def get_user(request):
@@ -62,6 +65,17 @@ def get_user(request):
     """
     logger.info(f"Call user API")
     return RETURN_FUNC(auth_service.get_user(request))
+
+@router.post(
+    "/find_password",
+    response={200: DataResp, 400: HttpResp, 403: HttpResp, 500: HttpResp},
+    summary="유저 비밀번호 인증 메일 전송"
+)
+def find_password(request, form: UserEmailSchema):
+    """
+    Find Password
+    """
+    return RETURN_FUNC(auth_service.user_find_password(form.dict()))
         
 
 

@@ -1,4 +1,6 @@
+from email.message import EmailMessage
 from functools import wraps
+import smtplib
 from typing import TypeVar
 
 import logging
@@ -35,5 +37,24 @@ def session_wrapper(func):
             session.close()
         
     return wrapped
+
+# 메일 전송
+def send_email(email, title, content):
+    gmail_smtp = 'smtp.gmail.com'
+    gmail_port = 465
+    smtp = smtplib.SMTP_SSL(gmail_smtp, gmail_port)
+    sender_account = settings.EMAIL_ACCOUNT
+    sender_password = settings.EMAIL_PASSWORD
+    smtp.login(sender_account, sender_password)
+    
+    message = EmailMessage()
+    message.set_content(content)
+    
+    message["Subject"] = title
+    message["From"] = sender_account
+    message["To"] = email
+
+    smtp.send_message(message) 
+    smtp.quit()
 
 RETURN_FUNC = lambda r: (r.resp_code, r)
