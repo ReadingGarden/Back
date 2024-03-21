@@ -151,6 +151,10 @@ USE_I18N = True
 
 USE_TZ = True
 
+# 이메일 계정
+EMAIL_ACCOUNT = env('EMAIL_ACCOUNT')
+EMAIL_PASSWORD = env('EMAIL_PASSWORD')
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
