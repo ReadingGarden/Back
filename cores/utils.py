@@ -1,6 +1,8 @@
 from email.message import EmailMessage
 from functools import wraps
+import random
 import smtplib
+import string
 from typing import TypeVar
 
 import logging
@@ -56,5 +58,20 @@ def send_email(email, title, content):
 
     smtp.send_message(message) 
     smtp.quit()
+
+# 영문과 숫자 랜덤 조합
+def generate_random_string(length):
+    # 영문자와 숫자를 포함한 모든 문자를 사용합니다.
+    characters = string.ascii_letters + string.digits
+    # 지정된 길이 만큼 랜덤하게 문자열을 생성합니다.
+    return ''.join(random.choice(characters) for _ in range(length))
+
+
+# 닉네임 랜덤 생성
+def generate_random_nick() -> str:
+    a = ['파란', '노란']
+    b = ['강아지', '고양이']
+    nick = random.choice(a) + random.choice(b)
+    return nick
 
 RETURN_FUNC = lambda r: (r.resp_code, r)
