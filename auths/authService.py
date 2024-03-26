@@ -146,11 +146,52 @@ class AuthService:
             # 토큰 발급
             token_pair = token_service.generate_pair_token(user_instance)
 
+            logger.info(f"유우우우우우우저{user_instance}")
+
+            # fcm 토큰 저장
+            user_instance.user_fcm = payload['user_fcm']
+
+            session.add(user_instance)
+            session.commit()
+            session.refresh(user_instance)
+
             return DataResp(resp_code=200, resp_msg="로그인 성공", data=token_pair)
         except VerifyMismatchError as e:
             logger.error(e)
             session.rollback()
             return HttpResp(resp_code=400, resp_msg="아이디 또는 비밀번호가 일치하지 않습니다.")
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+    @session_wrapper
+    def user_logout(self, session, request):
+        """
+        유저 로그아웃
+        """
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            # db에 프로필 update
+            user_instance.user_fcm = None
+
+            session.add(user_instance)
+            session.commit()
+            session.refresh(user_instance)
+        
+            return DataResp(resp_code=200, resp_msg="로그아웃 성공", data={})
         except Exception as e:
             logger.error(e)
             raise e
@@ -234,6 +275,9 @@ class AuthService:
     def get_user(
         self, session, request
     ):
+        """
+        유저 조회
+        """
         try:
             token = request.headers.get("Authorization")
             if token is not None:
