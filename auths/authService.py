@@ -6,6 +6,7 @@ from pytz import utc
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -66,7 +67,7 @@ def reset_auth_number(user_instance):
 class AuthService:
     # user 로직
     @session_wrapper
-    def user_signup(self, session, payload: GenericPayload):
+    def create_user(self, session, payload: GenericPayload):
         """
         유저 회원가입
         """
@@ -94,10 +95,7 @@ class AuthService:
             # password_hash = hashlib.sha512(password_md5.encode()).hexdigest()
 
             # form["user_password"] = password_hash
-                    
-            # 랜덤 닉네임
-                    
-            
+                
             # 새로운 유저 객체 생성
             new_user = User(
                 **payload,
@@ -153,30 +151,6 @@ class AuthService:
             logger.error(e)
             session.rollback()
             return HttpResp(resp_code=400, resp_msg="아이디 또는 비밀번호가 일치하지 않습니다.")
-        except Exception as e:
-            logger.error(e)
-            raise e
-
-    @session_wrapper
-    def get_user(
-        self, session, request
-    ):
-        try:
-            token = request.headers.get("Authorization")
-            if token is not None:
-                token = token.split(" ")[1]
-            else:
-                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
-            
-            payload = token_service.verify_access_token(token)
-            if not(
-                user_instance := session.query(User)
-                .filter(User.user_no == payload['user_no'])
-                .first()
-            ):
-                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
-            
-            return DataResp(resp_code=200, resp_msg="성공", data=user_instance.as_dict(exclude="user_password"))    
         except Exception as e:
             logger.error(e)
             raise e
@@ -255,6 +229,76 @@ class AuthService:
         self, session, payload: GenericPayload
     ):
         pass
+
+    @session_wrapper
+    def get_user(
+        self, session, request
+    ):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            return DataResp(resp_code=200, resp_msg="성공", data=user_instance.as_dict(exclude="user_password"))
+        except IndexError:
+            logger.error("Invalid Index")
+            return HttpResp(resp_code=500, resp_msg=str(e))
+        except ObjectDoesNotExist as e:
+            logger.error("Object Does Not Exist")
+            return HttpResp(resp_code=500, resp_msg=str(e))    
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+    @session_wrapper
+    def update_user(
+        self, session, request, payload: GenericPayload
+    ):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            # db에 프로필 update
+            user_instance.user_nick = payload['user_nick']
+            user_instance.user_image = payload['user_image']
+
+            session.add(user_instance)
+            session.commit()
+            session.refresh(user_instance)
+            
+            return DataResp(resp_code=200, resp_msg="성공", data=user_instance.as_dict(exclude="user_password"))
+        
+        except IndexError:
+            logger.error("Invalid Index")
+            return HttpResp(resp_code=500, resp_msg=str(e))
+        except ObjectDoesNotExist as e:
+            logger.error("Object Does Not Exist")
+            return HttpResp(resp_code=500, resp_msg=str(e))
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
         
 
     
