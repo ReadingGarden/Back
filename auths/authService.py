@@ -1,17 +1,67 @@
+from datetime import timedelta
 import hashlib
 import logging
 
+from pytz import utc
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+from django.utils import timezone
+
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+from apscheduler.jobstores.base import JobLookupError
 
 from auths.models import User
 from book import settings
 from cores.schema import DataResp, HttpResp, ServiceError
-from cores.utils import GenericPayload, send_email, session_wrapper
+from cores.utils import GenericPayload, send_email, session_wrapper, generate_random_string, generate_random_nick
 from auths.tokenService import token_service
 
 
 logger = logging.getLogger("django.server")
+
+# 스케쥴러 등록
+scheduler = BackgroundScheduler()
+jobstores = {
+    'default': SQLAlchemyJobStore(url="mysql://"
+    + settings.DB_USER
+    + ":"
+    + settings.DB_PASSWORD
+    + "@"
+    + settings.DB_HOST
+    + ":3306/"
+    + settings.DB_NAME)
+}
+executors = {
+  'default': ThreadPoolExecutor(20),
+  'processpool': ProcessPoolExecutor(5)
+}
+job_defaults = {
+  'coalesce': False,
+  'max_instances': 3
+}
+scheduler.configure(jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone=utc)
+scheduler.start()
+
+# 5분 후 인증번호 초기화
+def reset_auth_number(user_instance):
+    logger.info(f'reset_auth_number 함수가 실행되었습니다. :: {user_instance} ')
+    # user_instance.user_auth_number = ''
+
+    # session.add(user_instance)
+    # session.commit()
+    # session.refresh(user_instance)
+
+     # 트랜잭션 내에서 작업을 수행합니다.
+    # with transaction.atomic():
+        # 사용자 인증 번호를 초기화합니다.
+        # user_instance.user_auth_number = ''
+        
+        # 변경된 사용자 인스턴스를 세션에 추가합니다.
+        # user_instance.save()
+    
 
 class AuthService:
     # user 로직
@@ -21,20 +71,22 @@ class AuthService:
         유저 회원가입
         """
         try:
-            # 소셜 가입 중복 확인
-            if (
-                session.query(User)
-                .filter(User.user_social_id == payload["user_social_id"], User.user_social_type == payload["user_social_type"])
-                .first()
-            ):
-                return HttpResp(resp_code=409, resp_msg="소셜 아이디 중복")
-            # 이메일 중복 확인
-            if (
-                session.query(User)
-                .filter(User.user_email == payload["user_email"])
-                .first()
-            ):
-                return HttpResp(resp_code=409, resp_msg="이메일 중복")
+            if payload['user_social_id']:
+                # 소셜 가입 중복 확인
+                if (
+                    session.query(User)
+                    .filter(User.user_social_id == payload["user_social_id"], User.user_social_type == payload["user_social_type"])
+                    .first()
+                ):
+                    return HttpResp(resp_code=409, resp_msg="소셜 아이디 중복")
+                else:
+                    # 이메일 중복 확인
+                    if (
+                        session.query(User)
+                        .filter(User.user_email == payload["user_email"])
+                        .first()
+                    ):
+                        return HttpResp(resp_code=409, resp_msg="이메일 중복")
             
             #TODO 비밀번호 암호화
             # 비밀번호 암호화
@@ -42,10 +94,14 @@ class AuthService:
             # password_hash = hashlib.sha512(password_md5.encode()).hexdigest()
 
             # form["user_password"] = password_hash
+                    
+            # 랜덤 닉네임
+                    
             
             # 새로운 유저 객체 생성
             new_user = User(
-                **payload
+                **payload,
+                user_nick = generate_random_nick()
             )
             
             # 세션에 추가
@@ -138,17 +194,68 @@ class AuthService:
                 .filter(User.user_email == payload['user_email'])
                 .first()
             ):
-                return HttpResp(resp_code=400, resp_msg="존재하지 않는 이메일")
+                return HttpResp(resp_code=400, resp_msg="등록되지 않은 이메일 주소입니다")
             try:
-            # TODO: 메일 전송
-                send_email(email="ella@acryl.ai", title='test', content='test')
-                pass
+                auth_number = generate_random_string(5)
+                # send_email(email=payload['user_email'], title='test', content=auth_number)
             except:
                 return HttpResp(resp_code=403, resp_msg="메일 전송 실패")
+            
+
+            # TODO: - 5분 후 db 인증번호 초기화
+            reset_date = timezone.now() + timezone.timedelta(seconds=1)
+            # scheduler.add_job(
+            #     func=reset_auth_number,
+            #     args=[user_instance],
+            #     trigger=CronTrigger(
+            #          year=str(reset_date.year),
+            #          month=str(reset_date.month),
+            #          day=str(reset_date.day),
+            #          hour=str(reset_date.hour),
+            #          minute=str(reset_date.minute),
+            #     ),
+            # )
+            
+            logger.info(f'인증번호 초기화 {user_instance}')
+            # reset_auth_number(user_instance)
+            
+
+            # db에 인증번호 저장
+            user_instance.user_auth_number = auth_number
+
+            session.add(user_instance)
+            session.commit()
+            session.refresh(user_instance)
+    
+            return DataResp(resp_code=200, resp_msg="메일 전송 성공", data={})    
         except Exception as e:
             logger.error(e)
             raise e
 
+    @session_wrapper
+    def user_auth_check(
+        self, session, payload: GenericPayload
+    ):
+        """
+        유저 비밀번호 인증 확인
+        """
+        try:
+            user_instance = session.query(User).filter(User.user_email == payload['user_email']).first()
+
+            if user_instance.user_auth_number == payload['auth_number']:
+                 return DataResp(resp_code=200, resp_msg="인증 성공", data={})
+            else:
+                return HttpResp(resp_code=400, resp_msg="인증번호 불일치")
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+    @session_wrapper
+    def user_update_password(
+        self, session, payload: GenericPayload
+    ):
+        pass
+        
 
     
 auth_service = AuthService()
