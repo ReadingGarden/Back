@@ -40,7 +40,7 @@ class UpdateUserSchema(Schema, BaseModel):
     user_nick: str = Field("", alias="user_nick")
     user_image: str = Field("image1", alias="user_image")
    
-@router.post("/signup",
+@router.post("/",
              response={200: HttpResp, 409: HttpResp, 500: HttpResp}, 
              summary="유저 회원가입")
 def create_user(request, form: CreateUserSchema):
@@ -61,6 +61,32 @@ def login(request, form: LoginUserSchema):
    """
    logger.info(f"Call login API {form.dict(exclude={'user_password'})})")
    return RETURN_FUNC(auth_service.user_login(form.dict()))
+
+@router.post(
+   "/logout",
+   auth=UserAuth(),
+   response={200: DataResp, 400: HttpResp, 500: HttpResp},
+   summary="유저 로그아웃"
+)
+def logout(request):
+   """
+   로그아웃 (FCM 토큰 삭제)
+   """
+   logger.info(f"Call logout API")
+   return RETURN_FUNC(auth_service.user_logout(request))
+
+@router.delete(
+   "/",
+   auth=UserAuth(),
+   response={200: DataResp, 400: HttpResp, 500: HttpResp},
+   summary="유저 회원 탈퇴"
+)
+def delete_user(request):
+   """
+   유저 회원 탈퇴
+   """
+   logger.info(f"Call delete_user API")
+   return RETURN_FUNC(auth_service.user_delete(request))
 
 @router.post(
     "/find-password",
@@ -96,7 +122,7 @@ def auth_check(request, form: UserPasswordAuthSchema):
 #     return RETURN_FUNC(auth_service.user_update_password(form.dict()))
 
 @router.get(
-    "/user",
+    "/",
     auth=UserAuth(),
     response={200: DataResp, 400: HttpResp, 500: HttpResp},
     summary="유저 정보 조회"
@@ -108,8 +134,8 @@ def get_user(request):
     logger.info(f"Call get_user API")
     return RETURN_FUNC(auth_service.get_user(request))
 
-@router.post(
-    "/user",
+@router.put(
+    "/",
     auth=UserAuth(),
     response={200: DataResp, 400: HttpResp, 500: HttpResp},
     summary="유저 프로필 수정"

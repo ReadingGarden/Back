@@ -40,6 +40,16 @@ def session_wrapper(func):
         
     return wrapped
 
+# 5분 후 인증번호 초기화
+def reset_auth_number(user_instance):
+    logger.info(f'reset_auth_number 함수가 실행되었습니다.')
+    with SessionLocal() as session:
+        user_instance.user_auth_number = None
+
+        session.add(user_instance)
+        session.commit()
+        session.refresh(user_instance)
+
 # 메일 전송
 def send_email(email, title, content):
     gmail_smtp = 'smtp.gmail.com'
