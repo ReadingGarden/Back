@@ -1,4 +1,3 @@
-from datetime import timedelta
 import hashlib
 import logging
 
@@ -6,13 +5,11 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
-from apscheduler.jobstores.base import JobLookupError
 from tzlocal import get_localzone
 
 from auths.models import User
@@ -86,7 +83,7 @@ class AuthService:
             session.refresh(new_user)
 
             return DataResp(
-                resp_code=200, resp_msg="회원가입 성공", data={"user_no": new_user.user_no}
+                resp_code=201, resp_msg="회원가입 성공", data={"user_no": new_user.user_no}
             )
         except Exception as e:
             logger.error(e)
@@ -106,14 +103,14 @@ class AuthService:
                     .filter(User.user_social_id == payload['user_social_id'], User.user_social_type == payload['user_social_type'])
                     .first()
                 ):
-                    return HttpResp(resp_code=400, resp_msg="존재하지 않는 소셜")
+                    return HttpResp(resp_code=400, resp_msg="등록되지 않은 소셜입니다")
             else:
                 if not (
                     user_instance := session.query(User)
                     .filter(User.user_email == payload['user_email'])
                     .first()
                 ):
-                    return HttpResp(resp_code=400, resp_msg="존재하지 않는 이메일")
+                    return HttpResp(resp_code=400, resp_msg="등록되지 않은 이메일 주소입니다.")
                 if not (
                     user_instance.user_password == payload['user_password']
                 ):
@@ -123,8 +120,6 @@ class AuthService:
             
             # 토큰 발급
             token_pair = token_service.generate_pair_token(user_instance)
-
-            logger.info(f"유우우우우우우저{user_instance}")
 
             # fcm 토큰 저장
             user_instance.user_fcm = payload['user_fcm']
@@ -217,12 +212,12 @@ class AuthService:
                 .filter(User.user_email == payload['user_email'])
                 .first()
             ):
-                return HttpResp(resp_code=400, resp_msg="등록되지 않은 이메일 주소입니다")
+                return HttpResp(resp_code=400, resp_msg="등록되지 않은 이메일 주소입니다.")
             try:
                 auth_number = generate_random_string(5)
                 send_email(email=payload['user_email'], title='test', content=auth_number)
             except:
-                return HttpResp(resp_code=403, resp_msg="메일 전송 실패")
+                return HttpResp(resp_code=500, resp_msg="메일 전송 실패")
             
             reset_date = timezone.localtime(timezone.now()) + timezone.timedelta(minutes=5)
             # logger.info(f"reset_date {reset_date.year, reset_date.month, reset_date.day, reset_date.hour, reset_date.minute}")
@@ -245,7 +240,7 @@ class AuthService:
             session.commit()
             session.refresh(user_instance)
     
-            return DataResp(resp_code=200, resp_msg="메일 전송 성공", data={})    
+            return DataResp(resp_code=200, resp_msg="메일이 발송되었습니다. 확인해주세요.", data={})    
         except Exception as e:
             logger.error(e)
             raise e
@@ -269,10 +264,25 @@ class AuthService:
             raise e
         
     @session_wrapper
-    def user_update_password(
+    def user_update_password_no_token(
         self, session, payload: GenericPayload
     ):
-        pass
+        """
+        유저 비밀번호 변경 (토큰 X)
+        """
+        try:
+            user_instance = session.query(User).filter(User.user_email == payload['user_email']).first()
+            
+            user_instance.user_password = payload['user_password']
+
+            session.add(user_instance)
+            session.commit()
+            session.refresh(user_instance)
+            return DataResp(resp_code=200, resp_msg="비밀번호 변경 성공", data={})
+        except Exception as e:
+            logger.error(e)
+            raise e
+
 
     @session_wrapper
     def get_user(
@@ -296,13 +306,7 @@ class AuthService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
-            return DataResp(resp_code=200, resp_msg="성공", data=user_instance.as_dict(exclude="user_password"))
-        except IndexError:
-            logger.error("Invalid Index")
-            return HttpResp(resp_code=500, resp_msg=str(e))
-        except ObjectDoesNotExist as e:
-            logger.error("Object Does Not Exist")
-            return HttpResp(resp_code=500, resp_msg=str(e))    
+            return DataResp(resp_code=200, resp_msg="조회 성공", data=user_instance.as_dict(exclude="user_password"))    
         except Exception as e:
             logger.error(e)
             raise e
@@ -334,14 +338,7 @@ class AuthService:
             session.commit()
             session.refresh(user_instance)
             
-            return DataResp(resp_code=200, resp_msg="성공", data=user_instance.as_dict(exclude="user_password"))
-        
-        except IndexError:
-            logger.error("Invalid Index")
-            return HttpResp(resp_code=500, resp_msg=str(e))
-        except ObjectDoesNotExist as e:
-            logger.error("Object Does Not Exist")
-            return HttpResp(resp_code=500, resp_msg=str(e))
+            return DataResp(resp_code=200, resp_msg="프로필 변경 성공", data=user_instance.as_dict(exclude="user_password"))
         except Exception as e:
             logger.error(e)
             raise e

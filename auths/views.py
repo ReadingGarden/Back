@@ -39,9 +39,14 @@ class UpdateUserSchema(Schema, BaseModel):
     # user_email: str = Field(..., alias="user_email")
     user_nick: str = Field("", alias="user_nick")
     user_image: str = Field("image1", alias="user_image")
+
+class UpdateUserPasswordSchema(Schema, BaseModel):
+    user_email: str = Field(..., alias="user_email")
+    user_password: str = Field(..., alias="user_password")
    
+
 @router.post("/",
-             response={200: HttpResp, 409: HttpResp, 500: HttpResp}, 
+             response={201: HttpResp, 409: HttpResp, 500: HttpResp}, 
              summary="유저 회원가입")
 def create_user(request, form: CreateUserSchema):
     """
@@ -49,6 +54,7 @@ def create_user(request, form: CreateUserSchema):
     """
     logger.info(f"user signup {form.dict(exclude={'user_password'})}")
     return RETURN_FUNC(auth_service.create_user(form.dict()))
+
 
 @router.post(
    "/login",
@@ -61,6 +67,7 @@ def login(request, form: LoginUserSchema):
    """
    logger.info(f"Call login API {form.dict(exclude={'user_password'})})")
    return RETURN_FUNC(auth_service.user_login(form.dict()))
+
 
 @router.post(
    "/logout",
@@ -75,6 +82,7 @@ def logout(request):
    logger.info(f"Call logout API")
    return RETURN_FUNC(auth_service.user_logout(request))
 
+
 @router.delete(
    "/",
    auth=UserAuth(),
@@ -88,6 +96,7 @@ def delete_user(request):
    logger.info(f"Call delete_user API")
    return RETURN_FUNC(auth_service.user_delete(request))
 
+
 @router.post(
     "/find-password",
     response={200: DataResp, 400: HttpResp, 403: HttpResp, 500: HttpResp},
@@ -99,6 +108,7 @@ def find_password(request, form: UserEmailSchema):
     """
     return RETURN_FUNC(auth_service.user_find_password(form.dict()))
 
+
 @router.post(
     "/find-password/check",
     response={200: DataResp, 400: HttpResp, 500: HttpResp},
@@ -109,17 +119,19 @@ def auth_check(request, form: UserPasswordAuthSchema):
     비밀번호 인증 확인
     """
     return RETURN_FUNC(auth_service.user_auth_check(form.dict()))
-        
-# @router.post(
-#     "/update-password",
-#     response={200: DataResp, 400: HttpResp, 403: HttpResp, 500: HttpResp},
-#     summary="유저 비밀번호 인증 메일 전송"
-# )
-# def update_password(request, form: UserEmailSchema):
-#     """
-#     Update Password
-#     """
-#     return RETURN_FUNC(auth_service.user_update_password(form.dict()))
+
+
+@router.post(
+    "/find-password/update-password",
+    response={200: DataResp, 400: HttpResp, 403: HttpResp, 500: HttpResp},
+    summary="유저 비밀번호 변경 (토큰 X)"
+)
+def update_password(request, form: UpdateUserPasswordSchema):
+    """
+    Update Password No Token
+    """
+    return RETURN_FUNC(auth_service.user_update_password_no_token(form.dict()))
+
 
 @router.get(
     "/",
@@ -133,6 +145,7 @@ def get_user(request):
     """
     logger.info(f"Call get_user API")
     return RETURN_FUNC(auth_service.get_user(request))
+
 
 @router.put(
     "/",
