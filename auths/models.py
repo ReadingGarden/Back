@@ -21,9 +21,7 @@ class User(AuthBase, UtilModel):
     user_auth_number = Column(String(10), nullable=True)
     user_created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
-class JWT(UtilModel):
-    __tablename__ = "JWT"
-    
+class JWT(UtilModel):    
     abstract = True
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -32,7 +30,7 @@ class JWT(UtilModel):
     exp = Column(DateTime(timezone=True))
 
 class RefreshToken(AuthBase, JWT):
-    __tablename__ = "refresh_tokens"
+    __tablename__ = "REFRESH_TOKEN"
 
     
 

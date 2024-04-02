@@ -4,7 +4,6 @@ import logging
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from django.utils import timezone
-from django.core.exceptions import ObjectDoesNotExist
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -12,7 +11,7 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 from tzlocal import get_localzone
 
-from auths.models import User
+from auths.models import RefreshToken, User
 from book import settings
 from cores.schema import DataResp, HttpResp, ServiceError
 from cores.utils import GenericPayload, send_email, session_wrapper, generate_random_string, generate_random_nick, reset_auth_number
@@ -157,17 +156,48 @@ class AuthService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
-            # db에 프로필 update
+
+            # Refresh Token 삭제
+            refresh_token = session.query(RefreshToken).filter(RefreshToken.user_no == user_instance.user_no).first()
+
+            session.delete(refresh_token)
+
+            # FCM 삭제
             user_instance.user_fcm = None
 
             session.add(user_instance)
             session.commit()
             session.refresh(user_instance)
-        
+
+            
+            # token_service.revoke_refresh_token(token)
+
             return DataResp(resp_code=200, resp_msg="로그아웃 성공", data={})
         except Exception as e:
             logger.error(e)
             raise e
+        
+    @session_wrapper
+    def refresh(self, session, payload: GenericPayload):
+        """
+        토큰 리프레시
+        """
+        try:
+        #     token = request.headers.get("Authorization")
+        #     if token is not None:
+        #         token = token.split(" ")[1]
+        #     else:
+        #         return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_refresh_token(payload['refresh_token'])
+            user_instance = session.query(User).filter(User.user_no == token_payload['user_no']).first()
+            
+            new_token = token_service.generate_access_token(user_instance)
+
+            return DataResp(resp_code=200, resp_msg="토큰 발급 성공", data=new_token)
+        except Exception as e:
+            logger.error(e)
+            raise e 
         
     @session_wrapper
     def user_delete(self, session, request):
@@ -306,7 +336,15 @@ class AuthService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
-            return DataResp(resp_code=200, resp_msg="조회 성공", data=user_instance.as_dict(exclude="user_password"))    
+            return DataResp(resp_code=200, resp_msg="조회 성공", data=user_instance.as_dict(exclude="user_password"))
+        # except (
+        #     jwt.ExpiredSignatureError,
+        #     jwt.InvalidTokenError,
+        #     jwt.DecodeError
+
+        # ) as e :
+        #     logger.error(e)
+        #     return HttpResp(resp_code=401, resp_msg="유효하지 않은 토큰 값입니다.")
         except Exception as e:
             logger.error(e)
             raise e

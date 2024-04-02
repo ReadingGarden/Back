@@ -7,6 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from auths.authService import auth_service
 from auths.permissions import UserAuth
+from auths.tokenService import token_service
 from cores.schema import DataResp, HttpResp, ServiceError
 from cores.utils import RETURN_FUNC
 
@@ -43,6 +44,9 @@ class UpdateUserSchema(Schema, BaseModel):
 class UpdateUserPasswordSchema(Schema, BaseModel):
     user_email: str = Field(..., alias="user_email")
     user_password: str = Field(..., alias="user_password")
+
+class RefreshTokenSchema(Schema, BaseModel):
+    refresh_token: str = Field(..., alias="refresh_token")
    
 
 @router.post("/",
@@ -81,6 +85,21 @@ def logout(request):
    """
    logger.info(f"Call logout API")
    return RETURN_FUNC(auth_service.user_logout(request))
+
+
+@router.post(
+    "/refresh",
+    # auth=UserAuth(),
+    response={200: DataResp, 401: HttpResp, 500: HttpResp},
+    summary="유저 토큰 재발급"
+)
+def refresh(request, form: RefreshTokenSchema):
+    """
+    토큰 재발급
+    """
+    logger.info("Call refresh API")
+    return RETURN_FUNC(token_service.refresh(form.dict()))
+    # return RETURN_FUNC(auth_service.refresh(form.dict()))
 
 
 @router.delete(
