@@ -3,7 +3,6 @@ import jwt
 
 from ninja import Router, Schema
 from pydantic import BaseModel, Field
-from django.core.exceptions import ObjectDoesNotExist
 
 from auths.authService import auth_service
 from auths.permissions import UserAuth

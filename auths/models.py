@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func, Date
+from sqlalchemy import Column, Integer, String, Text, DateTime, func
 from sqlalchemy.orm import DeclarativeBase
 
 from cores.models import UtilModel

@@ -16,6 +16,7 @@ from book import settings
 from cores.schema import DataResp, HttpResp, ServiceError
 from cores.utils import GenericPayload, send_email, session_wrapper, generate_random_string, generate_random_nick, reset_auth_number
 from auths.tokenService import token_service
+from garden.models import Garden, GardenUser
 
 
 logger = logging.getLogger("django.server")
@@ -39,7 +40,6 @@ scheduler.configure(jobstores=jobstores, executors=executors, job_defaults=job_d
 scheduler.start()
 
 class AuthService:
-    # user 로직
     @session_wrapper
     def create_user(self, session, payload: GenericPayload):
         """
@@ -75,11 +75,41 @@ class AuthService:
                 **payload,
                 user_nick = generate_random_nick()
             )
+
             # 세션에 추가
             session.add(new_user)
             # DB에 저장
             session.commit()
             session.refresh(new_user)
+            
+            # 새로운 가든 객체 생성
+            new_garden_dict = {
+                "garden_title" : '',
+                "garden_info" : '',
+                "garden_color" : 'red',
+                "garden_share" : False,
+            }
+            new_garden = Garden(
+                **new_garden_dict
+            )
+
+            session.add(new_garden)
+            session.commit()
+            session.refresh(new_garden)
+
+            # 새로운 가든-유저 객체 생성
+            new_garden_user_dict = {
+                "garden_no" : new_garden.garden_no,
+                "user_no" : new_user.user_no,
+                "garden_leader" : True,
+            }
+            new_garden_user = GardenUser(
+                **new_garden_user_dict
+            )
+            
+            session.add(new_garden_user)
+            session.commit()
+            session.refresh(new_garden_user)
 
             return DataResp(
                 resp_code=201, resp_msg="회원가입 성공", data={"user_no": new_user.user_no}
@@ -353,6 +383,9 @@ class AuthService:
     def update_user(
         self, session, request, payload: GenericPayload
     ):
+        """
+        프로필 수정
+        """
         try:
             token = request.headers.get("Authorization")
             if token is not None:
