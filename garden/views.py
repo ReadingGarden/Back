@@ -4,7 +4,7 @@ from ninja import Router, Schema
 from pydantic import BaseModel, Field
 from auths.permissions import UserAuth
 
-from cores.schema import HttpResp
+from cores.schema import DataResp, HttpResp
 from cores.utils import RETURN_FUNC
 from garden.gardenService import garden_service
 
@@ -20,11 +20,39 @@ class CreateGardenSchema(Schema, BaseModel):
 @router.post(
     "/",
     auth=UserAuth(),
-    response={201: HttpResp, 400: HttpResp, 500: HttpResp},
-    summary="가든 생성"
+    response={201: DataResp, 400: HttpResp, 500: HttpResp},
+    summary="가든 추가"
 )
 def create_garden(request, form: CreateGardenSchema):
     """
-    가든 생성
+    가든 추가
     """
     return RETURN_FUNC(garden_service.create_garden(request, form.dict()))
+
+
+@router.get(
+    "/list",
+    auth=UserAuth(),
+    response={200: DataResp, 400: HttpResp, 500: HttpResp},
+    summary="가든 List"
+)
+def get_garden(request):
+    """
+    가든 List
+    """
+    return RETURN_FUNC(garden_service.get_garden(request))
+
+
+@router.get(
+    "/detail",
+    auth=UserAuth(),
+    response={200: DataResp, 400: HttpResp, 500: HttpResp},
+    summary="가든 상세"
+)
+def get_garden_detail(request, garden_no: int):
+    """
+    가든 상세
+    """
+    return RETURN_FUNC(garden_service.get_garden_detail(request, garden_no))
+
+
