@@ -56,3 +56,16 @@ def get_garden_detail(request, garden_no: int):
     return RETURN_FUNC(garden_service.get_garden_detail(request, garden_no))
 
 
+@router.put(
+    "/",
+    auth=UserAuth(),
+    response={200: DataResp, 400: HttpResp, 500: HttpResp},
+    summary="가든 수정"
+)
+def update_garden(request, form: CreateGardenSchema, garden_no: int):
+    """
+    가든 수정
+    """
+    return RETURN_FUNC(garden_service.update_garden(request, form.dict(), garden_no))
+
+

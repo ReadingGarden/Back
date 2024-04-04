@@ -32,6 +32,8 @@ class GardenService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
+            # TODO: - 최대 5개 로직
+
             # 새로운 가든 객체 생성
             new_garden_dict = {
                 **payload,
@@ -145,6 +147,49 @@ class GardenService:
         
             return DataResp(
                 resp_code=200, resp_msg="가든 조회 성공", data=result
+            )
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+    @session_wrapper
+    def update_garden(self, session, request, payload: GenericPayload, garden_no: int):
+        """
+        가든 수정
+        """
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not(
+                garden_instacne := session.query(Garden)
+                .filter(Garden.garden_no == garden_no)
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 가든 정보가 없습니다.")
+            
+            # garden update
+            garden_instacne.garden_title = payload['garden_title']
+            garden_instacne.garden_info = payload['garden_info']
+            garden_instacne.garden_color = payload['garden_color']
+
+            session.add(garden_instacne)
+            session.commit()
+            session.refresh(garden_instacne)
+            
+            return DataResp(
+                resp_code=200, resp_msg="가든 수정 성공", data={}
             )
         except Exception as e:
             logger.error(e)
