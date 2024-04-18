@@ -112,10 +112,10 @@ SQLALCHEMY_DATABASE_URI = (
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': env("DBNAME"),
-#         'USER': env("ID"),
-#         'PASSWORD': env("PASSWORD"),
-#         'HOST': 'localhost',
+#         'NAME': env("DB_NAME"),
+#         'USER': env("DB_USER"),
+#         'PASSWORD': env("DB_PASSWORD"),
+#         'HOST': env("DB_HOST"),
 #         'PORT': '3306',
 #     }
 # }
@@ -154,6 +154,8 @@ USE_TZ = True
 # 이메일 계정
 EMAIL_ACCOUNT = env('EMAIL_ACCOUNT')
 EMAIL_PASSWORD = env('EMAIL_PASSWORD')
+# 알라딘 TTBKEY
+ALADIN_TTBKEY = env("ALADIN_TTBKEY")
 
 
 # Static files (CSS, JavaScript, Images)
