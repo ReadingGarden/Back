@@ -20,7 +20,7 @@ class CreateGardenSchema(Schema, BaseModel):
 @router.post(
     "/",
     auth=UserAuth(),
-    response={201: DataResp, 400: HttpResp, 500: HttpResp},
+    response={201: DataResp, 400: HttpResp, 403: HttpResp, 500: HttpResp},
     summary="가든 추가"
 )
 def create_garden(request, form: CreateGardenSchema):
@@ -67,5 +67,18 @@ def update_garden(request, form: CreateGardenSchema, garden_no: int):
     가든 수정
     """
     return RETURN_FUNC(garden_service.update_garden(request, form.dict(), garden_no))
+
+
+@router.delete(
+    "/",
+    auth=UserAuth(),
+    response={200: DataResp, 400: HttpResp, 403: HttpResp, 500: HttpResp},
+    summary="가든 삭제"
+)
+def delete_garden(request, garden_no: int):
+    """
+    가든 삭제
+    """
+    return RETURN_FUNC(garden_service.delete_garden(request, garden_no))
 
 
