@@ -84,8 +84,8 @@ class AuthService:
             
             # 새로운 가든 객체 생성
             new_garden_dict = {
-                "garden_title" : '',
-                "garden_info" : '',
+                "garden_title" : f'{new_user.user_nick}의 가든',
+                "garden_info" : '독서가든에 오신걸 환영합니다☺️ 오늘은 어떤 책을 키울까요?',
                 "garden_color" : 'red',
                 "garden_share" : False,
             }
@@ -249,10 +249,9 @@ class AuthService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
-            # TODO: - 로직 변경!!!
+            # TODO: - 리프레시 DB에서 토큰 삭제
             session.delete(user_instance)
             session.commit()
-            session.refresh(user_instance)
         
             return DataResp(resp_code=200, resp_msg="회원 탈퇴 성공", data={})
         except Exception as e:
