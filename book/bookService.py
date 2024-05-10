@@ -10,6 +10,7 @@ from book.models import Book
 from cores.schema import DataResp, HttpResp
 
 from cores.utils import GenericPayload, session_wrapper
+from garden.models import Garden, GardenUser
 
 
 logger = logging.getLogger("django.server")
@@ -104,6 +105,15 @@ class BookService:
                 .first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            # 가든 존재
+            if not (
+                session.query(Garden)
+                .filter(Garden.garden_no == payload['garden_no'], user_instance.user_no == GardenUser.user_no)
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 가든이 없습니다.")
+                
             
             #TODO - 나무 타입 선택
             new_book = Book(

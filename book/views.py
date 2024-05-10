@@ -89,7 +89,7 @@ def delete_book(request, book_no:str):
     response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="책 수정"
 )
-def update_book(request, form:PatchBookShecma, book_no: str):
+def update_book(request, form:PutBookShecma, book_no: str):
     """
     * book_no: ISBN13 입력 (9788937462788)
     """
