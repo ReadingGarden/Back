@@ -163,6 +163,50 @@ class BookService:
         except Exception as e:
             logger.error(e)
             raise e
+        
+
+    @session_wrapper
+    def update_book(self, session, request, payload:GenericPayload,  book_no:str):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not (
+                book_instance := session.query(Book).filter(Book.book_no ==  book_no, Book.user_no == user_instance.user_no).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
+            
+            book_instance.garden_no = payload['garden_no']
+            book_instance.book_title = payload['book_title']
+            book_instance.book_author = payload['book_author']
+            book_instance.book_publisher = payload['book_publisher']
+            book_instance.book_status = payload['book_status']
+
+            session.add(book_instance)
+            session.commit()
+            session.refresh(book_instance)
+
+            return HttpResp(resp_code=200, resp_msg="책 수정 성공")
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
 
     
         

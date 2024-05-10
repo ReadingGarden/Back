@@ -18,6 +18,13 @@ class CreateBookShecma(Schema, BaseModel):
     book_publisher: str = Field(..., alias="book_publisher")
     book_status: int = Field(..., alias="book_status")
 
+class PutBookShecma(Schema, BaseModel):
+    garden_no: int = Field(..., alias="garden_no", )
+    book_title: str = Field(..., alias="book_title")
+    book_author: str = Field(..., alias="book_author")
+    book_publisher: str = Field(..., alias="book_publisher")
+    book_status: int = Field(..., alias="book_status")
+
 
 @router.get(
     "/",
@@ -74,5 +81,19 @@ def delete_book(request, book_no:str):
     """
     logger.info(f"Call delete_book API")
     return RETURN_FUNC(book_service.delete_book(request, book_no))
+
+
+@router.put(
+    "/",
+    auth=UserAuth(),
+    response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="책 수정"
+)
+def update_book(request, form:PatchBookShecma, book_no: str):
+    """
+    * book_no: ISBN13 입력 (9788937462788)
+    """
+    logger.info(f"Call put_book API")
+    return RETURN_FUNC(book_service.update_book(request, form.dict(),  book_no))
 
 
