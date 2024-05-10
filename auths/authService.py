@@ -256,8 +256,10 @@ class AuthService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
-            # TODO: - 리프레시 DB에서 토큰 삭제
+            refresh_instance = session.query(RefreshToken).filter(RefreshToken.user_no == user_instance.user_no).first()
+            
             session.delete(user_instance)
+            session.delete(refresh_instance)
             session.commit()
         
             return DataResp(resp_code=200, resp_msg="회원 탈퇴 성공", data={})
