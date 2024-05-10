@@ -40,6 +40,19 @@ def get_book(request, query: str, start: int=1, maxResults: int=100):
     logger.info(f"Call get_book API")
     return RETURN_FUNC(book_service.get_book(request, query, start, maxResults))
 
+@router.get(
+    "/isbn",
+    auth=UserAuth(),
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="책 검색(ISBN)"
+)
+def get_isbn_book(request, query: str,):
+    """
+    * itemId: ISBN13 입력 (9788937462788)
+    """
+    logger.info(f"Call get_isbn_book API")
+    return RETURN_FUNC(book_service.get_isbn_book(request, query))
+
 
 @router.get(
     "/detail",
