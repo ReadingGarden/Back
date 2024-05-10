@@ -12,8 +12,8 @@ router = Router(tags=["book"])
 
 @router.get(
     "/",
-    # auth=UserAuth(),
-    response={200: DataResp, 400: HttpResp, 500: HttpResp},
+    auth=UserAuth(),
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="책 검색"
 )
 def get_book(request, query: str, start: int, maxResults: int):
@@ -27,13 +27,14 @@ def get_book(request, query: str, start: int, maxResults: int):
 
 @router.get(
     "/detail",
-    # auth=UserAuth(),
-    response={200: DataResp, 400: HttpResp, 500: HttpResp},
+    auth=UserAuth(),
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="책 상세 조회"
 )
 def get_book_detail(request, itemId: str):
     """
-    * itemId: ISBN13 입력
+    * itemId: ISBN13 입력 (9788937462788)
+    
     """
     logger.info(f"Call get_book_detail API")
     return RETURN_FUNC(book_service.get_book_detail(request, itemId))

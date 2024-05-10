@@ -75,7 +75,7 @@ def login(request, form: LoginUserSchema):
 @router.post(
    "/logout",
    auth=UserAuth(),
-   response={200: DataResp, 400: HttpResp, 500: HttpResp},
+   response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
    summary="유저 로그아웃"
 )
 def logout(request):
@@ -88,7 +88,6 @@ def logout(request):
 
 @router.post(
     "/refresh",
-    # auth=UserAuth(),
     response={200: DataResp, 401: HttpResp, 500: HttpResp},
     summary="유저 토큰 재발급"
 )
@@ -104,7 +103,7 @@ def refresh(request, form: RefreshTokenSchema):
 @router.delete(
    "/",
    auth=UserAuth(),
-   response={200: DataResp, 400: HttpResp, 500: HttpResp},
+   response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
    summary="유저 회원 탈퇴"
 )
 def delete_user(request):
@@ -154,7 +153,7 @@ def update_password(request, form: UpdateUserPasswordSchema):
 @router.get(
     "/",
     auth=UserAuth(),
-    response={200: DataResp, 400: HttpResp, 500: HttpResp},
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="유저 정보 조회"
 )
 def get_user(request):
@@ -168,7 +167,7 @@ def get_user(request):
 @router.put(
     "/",
     auth=UserAuth(),
-    response={200: DataResp, 400: HttpResp, 500: HttpResp},
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="유저 프로필 수정"
 )
 def update_user(request, form: UpdateUserSchema):

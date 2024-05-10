@@ -20,7 +20,7 @@ class CreateGardenSchema(Schema, BaseModel):
 @router.post(
     "/",
     auth=UserAuth(),
-    response={201: DataResp, 400: HttpResp, 403: HttpResp, 500: HttpResp},
+    response={201: DataResp, 400: HttpResp, 401: HttpResp, 403: HttpResp, 500: HttpResp},
     summary="가든 추가"
 )
 def create_garden(request, form: CreateGardenSchema):
@@ -33,7 +33,7 @@ def create_garden(request, form: CreateGardenSchema):
 @router.get(
     "/list",
     auth=UserAuth(),
-    response={200: DataResp, 400: HttpResp, 500: HttpResp},
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="가든 List"
 )
 def get_garden(request):
@@ -46,7 +46,7 @@ def get_garden(request):
 @router.get(
     "/detail",
     auth=UserAuth(),
-    response={200: DataResp, 400: HttpResp, 500: HttpResp},
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="가든 상세"
 )
 def get_garden_detail(request, garden_no: int):
@@ -59,7 +59,7 @@ def get_garden_detail(request, garden_no: int):
 @router.put(
     "/",
     auth=UserAuth(),
-    response={200: DataResp, 400: HttpResp, 500: HttpResp},
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="가든 수정"
 )
 def update_garden(request, form: CreateGardenSchema, garden_no: int):
@@ -72,7 +72,7 @@ def update_garden(request, form: CreateGardenSchema, garden_no: int):
 @router.delete(
     "/",
     auth=UserAuth(),
-    response={200: DataResp, 400: HttpResp, 403: HttpResp, 500: HttpResp},
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 403: HttpResp, 500: HttpResp},
     summary="가든 삭제"
 )
 def delete_garden(request, garden_no: int):

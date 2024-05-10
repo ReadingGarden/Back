@@ -9,6 +9,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+import jwt
 from tzlocal import get_localzone
 
 from auths.models import RefreshToken, User
@@ -203,6 +204,12 @@ class AuthService:
             # token_service.revoke_refresh_token(token)
 
             return DataResp(resp_code=200, resp_msg="로그아웃 성공", data={})
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
         except Exception as e:
             logger.error(e)
             raise e
@@ -254,6 +261,12 @@ class AuthService:
             session.commit()
         
             return DataResp(resp_code=200, resp_msg="회원 탈퇴 성공", data={})
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
         except Exception as e:
             logger.error(e)
             raise e
@@ -366,14 +379,12 @@ class AuthService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             return DataResp(resp_code=200, resp_msg="조회 성공", data=user_instance.as_dict(exclude="user_password"))
-        # except (
-        #     jwt.ExpiredSignatureError,
-        #     jwt.InvalidTokenError,
-        #     jwt.DecodeError
-
-        # ) as e :
-        #     logger.error(e)
-        #     return HttpResp(resp_code=401, resp_msg="유효하지 않은 토큰 값입니다.")
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
         except Exception as e:
             logger.error(e)
             raise e
@@ -409,6 +420,12 @@ class AuthService:
             session.refresh(user_instance)
             
             return DataResp(resp_code=200, resp_msg="프로필 변경 성공", data=user_instance.as_dict(exclude="user_password"))
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
         except Exception as e:
             logger.error(e)
             raise e

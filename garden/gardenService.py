@@ -1,5 +1,7 @@
 import logging
 
+import jwt
+
 from auths.models import User
 from auths.tokenService import token_service
 from cores.schema import DataResp, HttpResp
@@ -67,7 +69,12 @@ class GardenService:
             
             else:
                 return HttpResp(resp_code=403, resp_msg="가든 생성 개수 초과")
-
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
         except Exception as e:
             logger.error(e)
             raise e
@@ -94,13 +101,13 @@ class GardenService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             if not(
-                garden_instacne := session.query(Garden)
+                garden_instance := session.query(Garden)
                 .filter(Garden.garden_no == garden_no)
                 .first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 가든 정보가 없습니다.")
 
-            result = garden_instacne.as_dict()
+            result = garden_instance.as_dict()
 
             # GardenUser, User join
             garden_members_instance = (
@@ -125,7 +132,12 @@ class GardenService:
             
             return DataResp(
                 resp_code=200, resp_msg="가든 조회 성공", data=result)
-                
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')           
         except Exception as e:
             logger.error(e)
             raise e
@@ -185,6 +197,12 @@ class GardenService:
             return DataResp(
                 resp_code=200, resp_msg="가든 조회 성공", data=result
             )
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
         except Exception as e:
             logger.error(e)
             raise e
@@ -229,6 +247,12 @@ class GardenService:
             return DataResp(
                 resp_code=200, resp_msg="가든 수정 성공", data={}
             )
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
         except Exception as e:
             logger.error(e)
             raise e
@@ -278,6 +302,12 @@ class GardenService:
             return DataResp(
                 resp_code=200, resp_msg="가든 삭제 성공", data={}
             )
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
         except Exception as e:
             logger.error(e)
             raise e

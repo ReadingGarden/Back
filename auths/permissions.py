@@ -11,9 +11,6 @@ from book import settings
 
 logger = logging.getLogger("django.server")
 
-# class PermissionService:
-#     pass
-
 class UserAuth(HttpBearer):
     def authenticate(self, request: HttpRequest, token: str):
         try:
@@ -21,7 +18,6 @@ class UserAuth(HttpBearer):
             return token
         except ExpiredSignatureError:
             logger.error(f"Expired token supplied to {request.path}")
-            raise ExpiredSignatureError
+            return {'error': ExpiredSignatureError}
+            # raise ExpiredSignatureError
         
-
-# permission_service = PermissionService()

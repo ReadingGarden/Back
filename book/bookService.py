@@ -1,11 +1,14 @@
 
 import json
 import logging
+import jwt
 import requests
+from auths.models import User
+from auths.tokenService import token_service
 from book import settings
-from cores.schema import DataResp
+from cores.schema import DataResp, HttpResp
 
-from cores.utils import session_wrapper
+from cores.utils import GenericPayload, session_wrapper
 
 
 logger = logging.getLogger("django.server")
@@ -27,10 +30,17 @@ class BookService:
 
             return DataResp(
                     resp_code=200, resp_msg="책 검색 성공", data=response_json)
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
         except Exception as e:
             logger.error(e)
             raise e
         
+
     @session_wrapper
     def get_book_detail(self, session, request, itemId: str):
         """
@@ -44,11 +54,63 @@ class BookService:
             # JSON 형식의 텍스트 데이터를 파이썬 딕셔너리로 변환합니다.
             response_json = json.loads(book_response.text)
 
+            result = {
+                'searchCategoryId': response_json['searchCategoryId'],
+                'searchCategoryName': response_json['searchCategoryName'],
+                'title': response_json['item'][0]['title'],
+                # 'link': response_json['item'][0]['link'],
+                'author': response_json['item'][0]['author'],
+                # 'pubdate': response_json['item'][0]['pubdate'],
+                # 'description': response_json['item'][0]['description'],
+                'isbn13': response_json['item'][0]['isbn13'],
+                'cover': response_json['item'][0]['cover'],
+                'publisher': response_json['item'][0]['publisher'],
+                'itemPage': response_json['item'][0]['subInfo']['itemPage'],
+            }
+
+            result['record'] = {}
+            result['memo'] = {}
+
             return DataResp(
-                    resp_code=200, resp_msg="책 상세 조회 성공", data=response_json)
+                    resp_code=200, resp_msg="책 상세 조회 성공", data=result)
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
         except Exception as e:
             logger.error(e)
             raise e
+
+
+    @session_wrapper
+    def create_book(self, session, request, payload: GenericPayload):
+        """
+        책 추가
+        """
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            
+            pass
+        except Exception as e:
+            logger.error(e)
+            raise e
+
+    
         
 
 book_service = BookService()

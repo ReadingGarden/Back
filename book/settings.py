@@ -10,12 +10,15 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-from datetime import timedelta
-import os
-from pathlib import Path
-
+import pymysql
 import environ
+
+from datetime import timedelta
+from pathlib import Path
 from dotenv import load_dotenv
+
+# django, mysql 충돌 해결
+pymysql.install_as_MySQLdb()
 
 # .env 파일에서 환경 변수 로드
 load_dotenv()
