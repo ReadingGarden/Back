@@ -4,6 +4,7 @@ import jwt
 
 from auths.models import User
 from auths.tokenService import token_service
+from book.models import Book
 from cores.schema import DataResp, HttpResp
 from sqlalchemy.orm import aliased
 
@@ -106,8 +107,30 @@ class GardenService:
                 .first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 가든 정보가 없습니다.")
-
+            
             result = garden_instance.as_dict()
+            
+
+            #TODO: - dododo
+            # Book 가져오기
+            book_instance = (
+                session.query(Book)
+                .filter(Book.garden_no == garden_no, Book.user_no == user_instance.user_no)
+                .all()
+            )
+            #TODO - 나무 타입
+            book_list = [
+                {
+                    'book_no': book.book_no,
+                    'book_title': book.book_title,
+                    'book_author': book.book_author,
+                    'book_publisher': book.book_publisher
+                }
+                for book in book_instance
+            ]
+
+            result['book_list'] = book_list
+
 
             # GardenUser, User join
             garden_members_instance = (
@@ -129,7 +152,9 @@ class GardenService:
                  )
 
             result['garden_members'] = garden_members_list
+
             
+
             return DataResp(
                 resp_code=200, resp_msg="가든 조회 성공", data=result)
         except (
