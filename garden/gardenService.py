@@ -42,7 +42,6 @@ class GardenService:
                 # 새로운 가든 객체 생성
                 new_garden_dict = {
                     **payload,
-                    "garden_share" : False,
                 }
                 new_garden = Garden(
                     **new_garden_dict
@@ -124,7 +123,8 @@ class GardenService:
                     'book_no': book.book_no,
                     'book_title': book.book_title,
                     'book_author': book.book_author,
-                    'book_publisher': book.book_publisher
+                    'book_publisher': book.book_publisher,
+                    'book_status': book.book_status
                 }
                 for book in book_instance
             ]
@@ -212,7 +212,6 @@ class GardenService:
                         'garden_title': garden.garden_title,
                         'garden_info': garden.garden_info,
                         'garden_color': garden.garden_color,
-                        'garden_share': garden.garden_share,
                         'garden_members': len(garden_members),
                         'garden_created_at': garden.garden_created_at,
                     }
