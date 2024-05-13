@@ -245,7 +245,7 @@ class BookService:
         
     
     @session_wrapper
-    def get_status_book(self, session, request, garden_no:int, status:int):
+    def get_status_book(self, session, request, garden_no:int=None, status:int=0):
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -261,16 +261,21 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
-            book_instance = (
+            book_query = (
                 session.query(Book)
-                .filter(Book.garden_no == garden_no, Book.user_no == user_instance.user_no, Book.book_status == status)
-                .all()
+                    .filter(Book.user_no == user_instance.user_no, Book.book_status == status)
             )
+            
+            if garden_no is not None:
+                book_query = book_query.filter(Book.garden_no == garden_no)
+
+            book_instance = book_query.all()
 
             #TODO - 나머지도
             result = [
                 {
                     'book_no': book.book_no,
+                    'garden_no': book.garden_no,
                     'book_title': book.book_title,
                     'book_author': book.book_author,
                     'book_publisher': book.book_publisher,
