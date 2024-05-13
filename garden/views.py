@@ -24,9 +24,6 @@ class CreateGardenSchema(Schema, BaseModel):
     summary="가든 추가"
 )
 def create_garden(request, form: CreateGardenSchema):
-    """
-    가든 추가
-    """
     return RETURN_FUNC(garden_service.create_garden(request, form.dict()))
 
 
@@ -34,12 +31,9 @@ def create_garden(request, form: CreateGardenSchema):
     "/list",
     auth=UserAuth(),
     response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
-    summary="가든 List"
+    summary="가든 리스트 조회"
 )
 def get_garden(request):
-    """
-    가든 List
-    """
     return RETURN_FUNC(garden_service.get_garden(request))
 
 
@@ -47,12 +41,9 @@ def get_garden(request):
     "/detail",
     auth=UserAuth(),
     response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
-    summary="가든 상세"
+    summary="가든 상세 조회"
 )
 def get_garden_detail(request, garden_no: int):
-    """
-    가든 상세
-    """
     return RETURN_FUNC(garden_service.get_garden_detail(request, garden_no))
 
 
@@ -63,9 +54,6 @@ def get_garden_detail(request, garden_no: int):
     summary="가든 수정"
 )
 def update_garden(request, form: CreateGardenSchema, garden_no: int):
-    """
-    가든 수정
-    """
     return RETURN_FUNC(garden_service.update_garden(request, form.dict(), garden_no))
 
 
@@ -76,9 +64,6 @@ def update_garden(request, form: CreateGardenSchema, garden_no: int):
     summary="가든 삭제"
 )
 def delete_garden(request, garden_no: int):
-    """
-    가든 삭제
-    """
     return RETURN_FUNC(garden_service.delete_garden(request, garden_no))
 
 

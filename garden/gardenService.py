@@ -156,6 +156,7 @@ class GardenService:
                         'user_no': user.user_no,
                         'user_nick': user.user_nick,
                         'user_image': user.user_image,
+                        'garden_leader': garden_user.garden_leader,
                         'garden_sign_date': garden_user.garden_sign_date,
                      }
                  )

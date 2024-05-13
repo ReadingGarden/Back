@@ -264,11 +264,13 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
+            # 전체 조회
             book_query = (
                 session.query(Book)
                     .filter(Book.user_no == user_instance.user_no, Book.book_status == status)
             )
             
+            # 필터 조회
             if garden_no is not None:
                 book_query = book_query.filter(Book.garden_no == garden_no)
 
