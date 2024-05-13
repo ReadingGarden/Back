@@ -412,6 +412,42 @@ class BookService:
             raise e
 
 
+    @session_wrapper
+    def delete_read(self, session, request, id:int):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+
+            if not (
+                book_read_instance := session.query(Book_Read).filter(Book_Read.id == id).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 책 기록이 없습니다.")
+
+            session.delete(book_read_instance)
+            session.commit()
+                
+            return HttpResp(resp_code=200, resp_msg="책 기록 삭제 성공")
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
+
         
 
 book_service = BookService()

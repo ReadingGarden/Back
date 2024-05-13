@@ -128,6 +128,15 @@ def get_book_status(request, garden_no:int=None, status:int=0):
     logger.info(f"Call put_book API")
     return RETURN_FUNC(book_service.get_book_status(request,garden_no, status))
 
+@router.get(
+    "/read",
+    auth=UserAuth(),
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="책 기록 조회"
+)
+def get_read(request, book_no:str):
+    logger.info(f"Call get_read API")
+    return RETURN_FUNC(book_service.get_read(request, book_no))
 
 @router.post(
     "/read",
@@ -138,5 +147,19 @@ def get_book_status(request, garden_no:int=None, status:int=0):
 def create_read(request, form:CreateReadShecma):
     logger.info(f"Call create_read API")
     return RETURN_FUNC(book_service.create_read(request, form.dict()))
+
+@router.delete(
+    "/read",
+    auth=UserAuth(),
+    response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="책 기록 삭제"
+)
+def delete_read(request, id: int):
+    logger.info(f"Call delete_read API")
+    return RETURN_FUNC(book_service.delete_read(request, id))
+
+
+
+
 
 
