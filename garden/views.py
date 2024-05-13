@@ -76,4 +76,13 @@ def delete_garden(request, garden_no: int):
 def delete_garden_member(request, garden_no: int):
     return RETURN_FUNC(garden_service.delete_garden_member(request, garden_no))
 
+@router.put(
+    "/member",
+    auth=UserAuth(),
+    response={200: HttpResp, 400: HttpResp, 401: HttpResp, 403: HttpResp, 500: HttpResp},
+    summary="가든 대표 변경"
+)
+def put_garden_leader(request, garden_no: int, user_no:int):
+    return RETURN_FUNC(garden_service.put_garden_leader(request, garden_no, user_no))
+
 

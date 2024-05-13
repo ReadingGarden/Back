@@ -1,7 +1,7 @@
 import logging
 import jwt
 
-from sqlalchemy import desc
+from sqlalchemy import asc, desc
 from auths.models import User
 from auths.tokenService import token_service
 from book.models import Book, Book_Read
@@ -379,6 +379,57 @@ class GardenService:
             
             return HttpResp(
                 resp_code=200, resp_msg="가든 탈퇴 성공"
+            )
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+
+    @session_wrapper
+    def put_garden_leader(self, session, request, garden_no: int, user_no:int):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not(
+                garden_instance := session.query(Garden)
+                .filter(Garden.garden_no == garden_no)
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 가든 정보가 없습니다.")            
+            
+            garden_user_instance = session.query(GardenUser).filter(GardenUser.garden_no == garden_no, GardenUser.user_no == user_instance.user_no).first()
+
+            # 현재 대표 -> 위임
+            if garden_user_instance.garden_leader:
+                garden_user_instance2 = session.query(GardenUser).filter(GardenUser.garden_no == garden_no, GardenUser.user_no == user_no).order_by(asc(GardenUser.garden_sign_date)).first()
+                
+                garden_user_instance.garden_leader = False
+                garden_user_instance2.garden_leader = True
+
+                session.add(garden_user_instance2)
+                session.commit()
+                session.refresh(garden_user_instance2)
+            
+            return HttpResp(
+                resp_code=200, resp_msg="가든 멤버 변경 성공"
             )
         except (
             jwt.ExpiredSignatureError,
