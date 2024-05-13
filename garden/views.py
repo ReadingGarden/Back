@@ -60,10 +60,20 @@ def update_garden(request, form: CreateGardenSchema, garden_no: int):
 @router.delete(
     "/",
     auth=UserAuth(),
-    response={200: DataResp, 400: HttpResp, 401: HttpResp, 403: HttpResp, 500: HttpResp},
+    response={200: HttpResp, 400: HttpResp, 401: HttpResp, 403: HttpResp, 500: HttpResp},
     summary="가든 삭제"
 )
 def delete_garden(request, garden_no: int):
     return RETURN_FUNC(garden_service.delete_garden(request, garden_no))
+
+
+@router.delete(
+    "/member",
+    auth=UserAuth(),
+    response={200: HttpResp, 400: HttpResp, 401: HttpResp, 403: HttpResp, 500: HttpResp},
+    summary="가든 탈퇴"
+)
+def delete_garden_member(request, garden_no: int):
+    return RETURN_FUNC(garden_service.delete_garden_member(request, garden_no))
 
 
