@@ -14,7 +14,6 @@ class Garden(GardenBase, UtilModel):
     garden_title = Column(String(30), nullable=False)
     garden_info = Column(String(200), nullable=False)
     garden_color = Column(String(20), nullable=False)
-    garden_share = Column(Boolean, nullable=False)
     garden_created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 class GardenUser(GardenBase, UtilModel):

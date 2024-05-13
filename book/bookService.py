@@ -23,7 +23,6 @@ class BookService:
         """
         try:
             KEY = settings.ALADIN_TTBKEY
-            # URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&itemIdType=ISBN&ItemId=K762839932&output=js&Version=20131101&OptResult=ebookList,usedList,reviewList"
             URL = f"http://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey={KEY}&Query={query}&QueryType=Keyword&MaxResults={maxResults}&start={start}&SearchTarget=BOOK&output=js&Version=20131101"
 
             book_response = requests.get(URL)
@@ -50,7 +49,6 @@ class BookService:
         """
         try:
             KEY = settings.ALADIN_TTBKEY
-
             URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&itemIdType=ISBN&ItemId={query}&output=js&Version=20131101&"
 
             book_response = requests.get(URL)
@@ -71,13 +69,13 @@ class BookService:
         
 
     @session_wrapper
-    def get_book_detail(self, session, request, itemId: str):
+    def get_book_detail(self, session, request, query: str):
         """
         책 상세 조회
         """
         try:
             KEY = settings.ALADIN_TTBKEY
-            URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&itemIdType=ISBN13&ItemId={itemId}&output=js&Version=20131101"
+            URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&itemIdType=ISBN13&ItemId={query}&output=js&Version=20131101"
             
             book_response = requests.get(URL)
             # JSON 형식의 텍스트 데이터를 파이썬 딕셔너리로 변환합니다.
@@ -96,7 +94,8 @@ class BookService:
                 'publisher': response_json['item'][0]['publisher'],
                 'itemPage': response_json['item'][0]['subInfo']['itemPage'],
             }
-
+            
+            #TODO - 
             result['record'] = {}
             result['memo'] = {}
 
@@ -147,7 +146,6 @@ class BookService:
                 **payload,
                 user_no=user_instance.user_no
             )
-            #TODO - 읽고싶은 책 지정시 찜목록으로 들어감(2)
 
             session.add(new_book)
             session.commit()
@@ -244,8 +242,55 @@ class BookService:
         except Exception as e:
             logger.error(e)
             raise e
-
+        
     
+    @session_wrapper
+    def get_status_book(self, session, request, garden_no:int, status:int):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            book_instance = (
+                session.query(Book)
+                .filter(Book.garden_no == garden_no, Book.user_no == user_instance.user_no, Book.book_status == status)
+                .all()
+            )
+
+            #TODO - 나머지도
+            result = [
+                {
+                    'book_no': book.book_no,
+                    'book_title': book.book_title,
+                    'book_author': book.book_author,
+                    'book_publisher': book.book_publisher,
+                    'book_status': book.book_status
+                }
+                for book in book_instance
+            ]
+            
+            return DataResp(resp_code=200, resp_msg="책 상태 조회 성공", data=result)
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
+
+
         
 
 book_service = BookService()

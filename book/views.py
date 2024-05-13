@@ -48,7 +48,7 @@ def get_book(request, query: str, start: int=1, maxResults: int=100):
 )
 def get_isbn_book(request, query: str,):
     """
-    * itemId: ISBN13 입력 (9788937462788)
+    * query: ISBN13 입력 (9788937462788)
     """
     logger.info(f"Call get_isbn_book API")
     return RETURN_FUNC(book_service.get_isbn_book(request, query))
@@ -60,12 +60,12 @@ def get_isbn_book(request, query: str,):
     response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="책 상세 조회"
 )
-def get_book_detail(request, itemId: str):
+def get_book_detail(request, query: str):
     """
-    * itemId: ISBN13 입력 (9788937462788)
+    * query: ISBN13 입력 (9788937462788)
     """
     logger.info(f"Call get_book_detail API")
-    return RETURN_FUNC(book_service.get_book_detail(request, itemId))
+    return RETURN_FUNC(book_service.get_book_detail(request, query))
 
 
 @router.post(
@@ -108,5 +108,19 @@ def update_book(request, form:PutBookShecma, book_no: str):
     """
     logger.info(f"Call put_book API")
     return RETURN_FUNC(book_service.update_book(request, form.dict(),  book_no))
+
+
+@router.get(
+    "/status",
+    auth=UserAuth(),
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="책 상태 조회"
+)
+def get_status_book(request, garden_no:int, status:int):
+    """
+    * status: 0읽는중, 1읽은책, 2읽고싶은책
+    """
+    logger.info(f"Call put_book API")
+    return RETURN_FUNC(book_service.get_status_book(request,garden_no, status))
 
 

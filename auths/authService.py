@@ -88,7 +88,6 @@ class AuthService:
                 "garden_title" : f'{new_user.user_nick}의 가든',
                 "garden_info" : '독서가든에 오신걸 환영합니다☺️ 오늘은 어떤 책을 키울까요?',
                 "garden_color" : 'red',
-                "garden_share" : False,
             }
             new_garden = Garden(
                 **new_garden_dict

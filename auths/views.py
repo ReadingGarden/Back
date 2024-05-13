@@ -49,7 +49,7 @@ class RefreshTokenSchema(Schema, BaseModel):
    
 
 @router.post("/",
-             response={201: HttpResp, 409: HttpResp, 500: HttpResp}, 
+             response={201: DataResp, 409: HttpResp, 500: HttpResp}, 
              summary="유저 회원가입")
 def create_user(request, form: CreateUserSchema):
     """
