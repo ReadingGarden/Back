@@ -4,6 +4,7 @@ import json
 import logging
 import jwt
 import requests
+from sqlalchemy import desc
 from auths.models import User
 from auths.tokenService import token_service
 from book import settings
@@ -296,8 +297,58 @@ class BookService:
         except Exception as e:
             logger.error(e)
             raise e
-        
+    
+    @session_wrapper
+    def get_read(self, session, request, book_no:str):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not (
+                book_instance := session.query(Book).filter(Book.book_no == book_no, Book.user_no == user_instance.user_no).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
+            
+            result = {
+                'book_page': book_instance.book_page,
+                'book_status': book_instance.book_status,
+                'book_current_page': 0,
+                'percent': 0
+            }
 
+            if (
+                book_read_instance := session.query(Book_Read)
+                .filter(Book_Read.book_no == book_no, Book_Read.user_no == user_instance.user_no)
+                .order_by(desc(Book_Read.created_at))
+                .first()
+            ):
+                result['book_current_page'] = book_read_instance.book_current_page
+                result['percent'] = (book_read_instance.book_current_page/book_instance.book_page)*100
+
+            
+            return DataResp(resp_code=200, resp_msg="책 기록 조회 성공", data=result)
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+        
     @session_wrapper
     def create_read(self, session, request, payload: GenericPayload):
         try:
@@ -325,6 +376,7 @@ class BookService:
                 user_no = user_instance.user_no
             )
 
+            # 독서 기록 내역 없으면 시작 날짜 추가
             if not (
                 session.query(Book_Read)
                 .filter(Book_Read.book_no == payload['book_no'], Book_Read.user_no == user_instance.user_no)
@@ -332,11 +384,18 @@ class BookService:
             ):
                 new_Read.book_start_date = datetime.now()
 
+            # 마지막 페이지 읽으면 상태를 읽음으로 전환, 마지막 날짜 기록
+            if (
+                new_Read.book_current_page == book_instance.book_page
+            ):
+                new_Read.book_end_date = datetime.now()
+                book_instance.book_status = 2
+                session.add(book_instance)  
+
             session.add(new_Read)
             session.commit()
-            session.refresh(new_Read)
 
-            percent = new_Read.book_current_page/book_instance.book_page
+            percent = (new_Read.book_current_page/book_instance.book_page)*100
             
             return DataResp(resp_code=201, resp_msg="책 기록 성공", data={
                 'book_current_page': payload['book_current_page'],
