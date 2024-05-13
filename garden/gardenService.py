@@ -17,9 +17,6 @@ logger = logging.getLogger("django.server")
 class GardenService:
     @session_wrapper
     def create_garden(self, session, request, payload: GenericPayload):
-        """
-        가든 추가
-        """
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -82,9 +79,6 @@ class GardenService:
 
     @session_wrapper
     def get_garden_detail(self, session, request, garden_no: int):
-        """
-        가든 상세 정보 보기
-        """
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -109,12 +103,10 @@ class GardenService:
             
             result = garden_instance.as_dict()
             
-
-            #TODO: - dododo
             # Book 가져오기
             book_instance = (
                 session.query(Book)
-                .filter(Book.garden_no == garden_no, Book.user_no == user_instance.user_no)
+                .filter(Book.garden_no == garden_no)
                 .all()
             )
             #TODO - 나무 타입
@@ -122,9 +114,11 @@ class GardenService:
                 {
                     'book_no': book.book_no,
                     'book_title': book.book_title,
-                    'book_author': book.book_author,
-                    'book_publisher': book.book_publisher,
-                    'book_status': book.book_status
+                    # 'book_author': book.book_author,
+                    # 'book_publisher': book.book_publisher,
+                    'book_status': book.book_status,
+                    'user_no': book.user_no
+                    # 'book_page': book.book_page
                 }
                 for book in book_instance
             ]
@@ -156,7 +150,7 @@ class GardenService:
             
 
             return DataResp(
-                resp_code=200, resp_msg="가든 조회 성공", data=result)
+                resp_code=200, resp_msg="가든 상세 조회 성공", data=result)
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,
@@ -170,9 +164,6 @@ class GardenService:
 
     @session_wrapper
     def get_garden(self, session, request):
-        """
-        가든 List 보기
-        """
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -219,7 +210,7 @@ class GardenService:
                 
         
             return DataResp(
-                resp_code=200, resp_msg="가든 조회 성공", data=result
+                resp_code=200, resp_msg="가든 리스트 조회 성공", data=result
             )
         except (
             jwt.ExpiredSignatureError,
@@ -234,9 +225,6 @@ class GardenService:
 
     @session_wrapper
     def update_garden(self, session, request, payload: GenericPayload, garden_no: int):
-        """
-        가든 수정
-        """
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -284,9 +272,6 @@ class GardenService:
 
     @session_wrapper
     def delete_garden(self, session, request, garden_no: int):
-        """
-        가든 삭제
-        """
         try:
             token = request.headers.get("Authorization")
             if token is not None:

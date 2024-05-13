@@ -1,4 +1,5 @@
 
+from datetime import datetime
 import json
 import logging
 import jwt
@@ -6,7 +7,7 @@ import requests
 from auths.models import User
 from auths.tokenService import token_service
 from book import settings
-from book.models import Book
+from book.models import Book, Book_Read
 from cores.schema import DataResp, HttpResp
 
 from cores.utils import GenericPayload, session_wrapper
@@ -245,7 +246,7 @@ class BookService:
         
     
     @session_wrapper
-    def get_status_book(self, session, request, garden_no:int=None, status:int=0):
+    def get_book_status(self, session, request, garden_no:int=None, status:int=0):
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -275,16 +276,72 @@ class BookService:
             result = [
                 {
                     'book_no': book.book_no,
-                    'garden_no': book.garden_no,
                     'book_title': book.book_title,
                     'book_author': book.book_author,
                     'book_publisher': book.book_publisher,
-                    'book_status': book.book_status
+                    'book_status': book.book_status,
+                    'book_page': book.book_page,
+                    'garden_no': book.garden_no,
                 }
                 for book in book_instance
             ]
             
             return DataResp(resp_code=200, resp_msg="책 상태 조회 성공", data=result)
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+
+    @session_wrapper
+    def create_read(self, session, request, payload: GenericPayload):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not (
+                book_instance := session.query(Book).filter(Book.book_no == payload['book_no'], Book.user_no == user_instance.user_no).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
+            
+            new_Read = Book_Read(
+                **payload,
+                user_no = user_instance.user_no
+            )
+
+            if not (
+                session.query(Book_Read)
+                .filter(Book_Read.book_no == payload['book_no'], Book_Read.user_no == user_instance.user_no)
+                .first()
+            ):
+                new_Read.book_start_date = datetime.now()
+
+            session.add(new_Read)
+            session.commit()
+            session.refresh(new_Read)
+
+            percent = new_Read.book_current_page/book_instance.book_page
+            
+            return DataResp(resp_code=201, resp_msg="책 기록 성공", data={
+                'book_current_page': payload['book_current_page'],
+                'percent': percent
+            })
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,
