@@ -1,7 +1,7 @@
 import logging
-
 import jwt
 
+from sqlalchemy import desc
 from auths.models import User
 from auths.tokenService import token_service
 from book.models import Book, Book_Read
@@ -117,9 +117,11 @@ class GardenService:
                     book_read_instance := 
                     session.query(Book_Read)
                     .filter(Book_Read.book_no == book.book_no)
-                    .all()
+                    .order_by(desc(Book_Read.created_at))
+                    .first()
                 ):
-                    percent = (Book_Read.book_current_page/book.book_page)*100
+                    percent = (book_read_instance.book_current_page/book.book_page)*100
+
                 book_list = [
                 {
                     'book_no': book.book_no,
