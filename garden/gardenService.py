@@ -4,7 +4,7 @@ import jwt
 
 from auths.models import User
 from auths.tokenService import token_service
-from book.models import Book
+from book.models import Book, Book_Read
 from cores.schema import DataResp, HttpResp
 from sqlalchemy.orm import aliased
 
@@ -109,19 +109,32 @@ class GardenService:
                 .filter(Book.garden_no == garden_no)
                 .all()
             )
+            
             #TODO - 나무 타입
-            book_list = [
+            for book in book_instance:
+                percent = 0
+                if (
+                    book_read_instance := 
+                    session.query(Book_Read)
+                    .filter(Book_Read.book_no == book.book_no)
+                    .all()
+                ):
+                    percent = (Book_Read.book_current_page/book.book_page)*100
+                book_list = [
                 {
                     'book_no': book.book_no,
                     'book_title': book.book_title,
                     # 'book_author': book.book_author,
                     # 'book_publisher': book.book_publisher,
                     'book_status': book.book_status,
+                    'percent': percent,
                     'user_no': book.user_no
                     # 'book_page': book.book_page
                 }
                 for book in book_instance
             ]
+                
+
 
             result['book_list'] = book_list
 

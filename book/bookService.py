@@ -376,26 +376,31 @@ class BookService:
                 user_no = user_instance.user_no
             )
 
-            # 독서 기록 내역 없으면 시작 날짜 추가
+            # 독서 기록 내역 없으면 상태를 읽는중으로 전환, 시작 날짜 추가
             if not (
                 session.query(Book_Read)
                 .filter(Book_Read.book_no == payload['book_no'], Book_Read.user_no == user_instance.user_no)
                 .first()
             ):
                 new_Read.book_start_date = datetime.now()
+                book_instance.book_status = 0
+                session.add(book_instance)
 
             # 마지막 페이지 읽으면 상태를 읽음으로 전환, 마지막 날짜 기록
             if (
                 new_Read.book_current_page == book_instance.book_page
             ):
                 new_Read.book_end_date = datetime.now()
-                book_instance.book_status = 2
+                book_instance.book_status = 1
                 session.add(book_instance)  
 
             session.add(new_Read)
             session.commit()
+            
+            percent = 0
 
-            percent = (new_Read.book_current_page/book_instance.book_page)*100
+            if  book_instance.book_page > 0:
+                percent = (new_Read.book_current_page/book_instance.book_page)*100
             
             return DataResp(resp_code=201, resp_msg="책 기록 성공", data={
                 'book_current_page': payload['book_current_page'],
