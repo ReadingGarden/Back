@@ -171,7 +171,7 @@ def delete_read(request, id: int):
 )
 def create_memo(request, form:CreateMemoShema):
     logger.info(f"Call create_memo API")
-    return RETURN_FUNC(book_service.delete_read(request, form.dict()))
+    return RETURN_FUNC(book_service.create_memo(request, form.dict()))
 
 
 
