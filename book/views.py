@@ -183,6 +183,16 @@ def update_memo(request, form:MemoShema, id:int):
     logger.info(f"Call update_memo API")
     return RETURN_FUNC(book_service.update_memo(request, form.dict(), id))
 
+@router.delete(
+    "/memo",
+    auth=UserAuth(),
+    response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="메모 삭제"
+)
+def delete_memo(request, id:int):
+    logger.info(f"Call delete_memo API")
+    return RETURN_FUNC(book_service.delete_memo(request, id))
+
 
 
 
