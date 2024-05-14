@@ -11,7 +11,7 @@ from garden.gardenService import garden_service
 logger = logging.getLogger("django.server")
 router = Router(tags=["garden"])
 
-class CreateGardenSchema(Schema, BaseModel):
+class GardenSchema(Schema, BaseModel):
     garden_title: str = Field("", alias="garden_title")
     garden_info: str = Field("", alias="garden_info")
     garden_color: str = Field("red", alias="garden_color")
@@ -23,7 +23,7 @@ class CreateGardenSchema(Schema, BaseModel):
     response={201: DataResp, 400: HttpResp, 401: HttpResp, 403: HttpResp, 500: HttpResp},
     summary="가든 추가"
 )
-def create_garden(request, form: CreateGardenSchema):
+def create_garden(request, form: GardenSchema):
     return RETURN_FUNC(garden_service.create_garden(request, form.dict()))
 
 
@@ -53,7 +53,7 @@ def get_garden_detail(request, garden_no: int):
     response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="가든 수정"
 )
-def update_garden(request, form: CreateGardenSchema, garden_no: int):
+def update_garden(request, form: GardenSchema, garden_no: int):
     return RETURN_FUNC(garden_service.update_garden(request, form.dict(), garden_no))
 
 
@@ -82,7 +82,7 @@ def delete_garden_member(request, garden_no: int):
     response={200: HttpResp, 400: HttpResp, 401: HttpResp, 403: HttpResp, 500: HttpResp},
     summary="가든 대표 변경"
 )
-def put_garden_leader(request, garden_no: int, user_no:int):
-    return RETURN_FUNC(garden_service.put_garden_leader(request, garden_no, user_no))
+def update_garden_leader(request, garden_no: int, user_no:int):
+    return RETURN_FUNC(garden_service.update_garden_leader(request, garden_no, user_no))
 
 

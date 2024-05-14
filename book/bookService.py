@@ -353,8 +353,16 @@ class BookService:
                 result['percent'] = (book_read_instance.book_current_page/book.book_page)*100
 
 
-            # TODO: - 메모 추가
-            result['memo'] = []
+            # TODO: - 메모 나머지
+            memo_instance = session.query(Book_Memo).filter(Book_Memo.book_no == book.book_no).all()
+
+            result['memo'] = [
+                {
+                    'id': memo.id,
+                    'memo_content': memo.memo_content
+                }
+                for memo in memo_instance
+            ]
 
             
             return DataResp(resp_code=200, resp_msg="책 기록 조회 성공", data=result)
@@ -472,7 +480,7 @@ class BookService:
         except Exception as e:
             logger.error(e)
             raise e
-
+    
 
     @session_wrapper
     def create_memo(self, session, request, payload: GenericPayload):
@@ -515,6 +523,51 @@ class BookService:
         except Exception as e:
             logger.error(e)
             raise e
-        
+    
+
+    @session_wrapper
+    def update_memo(self, session, request, payload: GenericPayload, id:int):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not (
+                memo_instance := session.query(Book_Memo).filter(Book_Memo.id == id).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 메모가 없습니다.")
+            
+            if not (
+                session.query(Book).filter(Book.book_no == payload['book_no'], Book.user_no == user_instance.user_no).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.") 
+
+            memo_instance.book_no = payload['book_no']
+            memo_instance.memo_content = payload['memo_content']
+            
+            session.add(memo_instance)
+            session.commit()
+            session.refresh(memo_instance)
+            
+            return HttpResp(resp_code=200, resp_msg="메모 수정 성공")
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
 
 book_service = BookService()

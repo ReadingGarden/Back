@@ -19,7 +19,7 @@ class CreateBookShema(Schema, BaseModel):
     book_status: int = Field(..., alias="book_status")
     book_page: int = Field(...,alias="book_page")
 
-class PutBookShema(Schema, BaseModel):
+class UpdateBookShema(Schema, BaseModel):
     garden_no: int = Field(..., alias="garden_no", )
     book_title: str = Field(..., alias="book_title")
     book_author: str = Field(..., alias="book_author")
@@ -31,7 +31,7 @@ class CreateReadShema(Schema, BaseModel):
     book_no: str = Field(..., alias="book_no")
     book_current_page: int = Field(..., alias="book_current_page")
 
-class CreateMemoShema(Schema, BaseModel):
+class MemoShema(Schema, BaseModel):
     book_no: str = Field(..., alias="book_no")
     memo_content: str = Field(..., alias="memo_content")
 
@@ -112,11 +112,11 @@ def delete_book(request, book_no:str):
     response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="책 수정"
 )
-def update_book(request, form:PutBookShema, book_no: str):
+def update_book(request, form:UpdateBookShema, book_no: str):
     """
     * book_no: ISBN13 입력 (9788937462788)
     """
-    logger.info(f"Call put_book API")
+    logger.info(f"Call update_book API")
     return RETURN_FUNC(book_service.update_book(request, form.dict(),  book_no))
 
 
@@ -130,7 +130,7 @@ def get_book_status(request, garden_no:int=None, status:int=0):
     """
     * status: 0읽는중, 1읽은책, 2읽고싶은책
     """
-    logger.info(f"Call put_book API")
+    logger.info(f"Call get_book_status API")
     return RETURN_FUNC(book_service.get_book_status(request,garden_no, status))
 
 @router.get(
@@ -169,9 +169,19 @@ def delete_read(request, id: int):
     response={201: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="메모 추가"
 )
-def create_memo(request, form:CreateMemoShema):
+def create_memo(request, form:MemoShema):
     logger.info(f"Call create_memo API")
     return RETURN_FUNC(book_service.create_memo(request, form.dict()))
+
+@router.put(
+    "/memo",
+    auth=UserAuth(),
+    response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="메모 수정"
+)
+def update_memo(request, form:MemoShema, id:int):
+    logger.info(f"Call update_memo API")
+    return RETURN_FUNC(book_service.update_memo(request, form.dict(), id))
 
 
 
