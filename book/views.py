@@ -203,6 +203,16 @@ def get_memo(request):
     logger.info(f"Call get_memo API")
     return RETURN_FUNC(book_service.get_memo(request))
 
+@router.get(
+    "/memo/detail",
+    auth=UserAuth(),
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="메모 상세 조회"
+)
+def get_memo_detail(request, id:int):
+    logger.info(f"Call get_memo_detail API")
+    return RETURN_FUNC(book_service.get_memo_detail(request, id))
+
 
 
 

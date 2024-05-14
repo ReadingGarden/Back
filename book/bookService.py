@@ -646,5 +646,45 @@ class BookService:
         except Exception as e:
             logger.error(e)
             raise e
+        
+
+    @session_wrapper
+    def get_memo_detail(self, session, request, id:int):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not (
+                memo_instance := session.query(Book_Memo).filter(Book_Memo.id == id).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 메모가 없습니다.")
+            
+            result = {
+                    'id': memo_instance.id,
+                    'book_no': memo_instance.book_no,
+                    'memo_content': memo_instance.memo_content,
+            }
+            
+            return DataResp(resp_code=200, resp_msg="메모 상세 조회 성공", data=result)
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
 
 book_service = BookService()
