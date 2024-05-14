@@ -193,6 +193,16 @@ def delete_memo(request, id:int):
     logger.info(f"Call delete_memo API")
     return RETURN_FUNC(book_service.delete_memo(request, id))
 
+@router.get(
+    "/memo",
+    auth=UserAuth(),
+    response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="메모 리스트 조회"
+)
+def get_memo(request):
+    logger.info(f"Call get_memo API")
+    return RETURN_FUNC(book_service.get_memo(request))
+
 
 
 

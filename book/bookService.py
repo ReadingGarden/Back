@@ -506,7 +506,8 @@ class BookService:
             
             
             new_memo = Book_Memo(
-                **payload
+                **payload,
+                user_no = user_instance.user_no
             )
 
             session.add(new_memo)
@@ -597,6 +598,45 @@ class BookService:
             session.commit()
             
             return HttpResp(resp_code=200, resp_msg="메모 삭제 성공")
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+
+    @session_wrapper
+    def get_memo(self, session, request):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            memo_instance = session.query(Book_Memo).filter(Book_Memo.user_no == user_instance.user_no).all()
+
+            result = [
+                {
+                    'id': memo.id,
+                    'book_no': memo.book_no,
+                    'memo_content': memo.memo_content,
+                }
+                for memo in memo_instance
+            ]
+            return DataResp(resp_code=200, resp_msg="메모 리스트 조회 성공", data=result)
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,
