@@ -318,17 +318,30 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
+            # Book, Garden join
             if not (
-                book_instance := session.query(Book).filter(Book.book_no == book_no, Book.user_no == user_instance.user_no).first()
+                book_garden_instance := session.query(Book, Garden)
+                .join(Garden, Book.garden_no == Garden.garden_no)
+                .filter(Book.book_no == book_no)
+                .first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
             
+            book, garden = book_garden_instance
+
+            # TODO - 이미지 추가
             result = {
-                'book_page': book_instance.book_page,
-                'book_status': book_instance.book_status,
+                'garden_title': garden.garden_title,
+                'book_title': book.book_title,
+                'book_author': book.book_author,
+                'book_publisher': book.book_publisher,
+                'book_status': book.book_status,
+                'book_page': book.book_page,
                 'book_current_page': 0,
-                'percent': 0
+                'percent': 0,
+                'user_no': book.user_no
             }
+            
 
             if (
                 book_read_instance := session.query(Book_Read)
@@ -337,7 +350,11 @@ class BookService:
                 .first()
             ):
                 result['book_current_page'] = book_read_instance.book_current_page
-                result['percent'] = (book_read_instance.book_current_page/book_instance.book_page)*100
+                result['percent'] = (book_read_instance.book_current_page/book.book_page)*100
+
+
+            # TODO: - 메모 추가
+            result['memo'] = []
 
             
             return DataResp(resp_code=200, resp_msg="책 기록 조회 성공", data=result)
