@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Integer, String, Text, func
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, func
 from sqlalchemy.orm import DeclarativeBase
 from cores.models import UtilModel
 
@@ -36,5 +36,6 @@ class Book_Memo(BookBase, UtilModel):
     id = Column(Integer, primary_key=True, autoincrement=True)
     book_no = Column(String(30), nullable=False)
     user_no = Column(Integer, nullable=False)
-    memo_content = Column(Text, nullable=False)    
+    memo_content = Column(Text, nullable=False)
+    memo_like = Column(Boolean, nullable=False, default=False)    
     memo_created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)

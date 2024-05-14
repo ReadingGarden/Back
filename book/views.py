@@ -213,6 +213,16 @@ def get_memo_detail(request, id:int):
     logger.info(f"Call get_memo_detail API")
     return RETURN_FUNC(book_service.get_memo_detail(request, id))
 
+@router.put(
+    "/memo/like",
+    auth=UserAuth(),
+    response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="메모 즐겨찾기 추가/해제"
+)
+def like_memo(request, id:int):
+    logger.info(f"Call like_memo API")
+    return RETURN_FUNC(book_service.like_memo(request, id))
+
 
 
 

@@ -5,7 +5,7 @@ import jwt
 import requests
 
 from datetime import datetime
-from sqlalchemy import desc
+from sqlalchemy import asc, desc
 from auths.models import User
 from auths.tokenService import token_service
 from book import settings
@@ -626,15 +626,26 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
-            memo_instance = session.query(Book_Memo).filter(Book_Memo.user_no == user_instance.user_no).all()
+            # Memo, Book join
+            memo_book_instance = (
+                session.query(Book_Memo, Book)
+                .join(Book, Book.book_no == Book_Memo.book_no)
+                .filter(Book_Memo.user_no == user_instance.user_no)
+                .order_by(Book_Memo.memo_like.desc(), Book_Memo.memo_created_at.desc())
+                .all()
+                )
 
             result = [
                 {
                     'id': memo.id,
                     'book_no': memo.book_no,
+                    'book_title': book.book_title,
+                    'book_author': book.book_author,
                     'memo_content': memo.memo_content,
+                    'memo_like': memo.memo_like,
+                    'memo_created_at': memo.memo_created_at
                 }
-                for memo in memo_instance
+                for memo, book in memo_book_instance
             ]
             return DataResp(resp_code=200, resp_msg="메모 리스트 조회 성공", data=result)
         except (
@@ -666,17 +677,64 @@ class BookService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             if not (
+                # Memo, Book join
+                memo_book_instance := session.query(Book_Memo, Book).join(Book, Book.book_no == Book_Memo.book_no).filter(Book_Memo.user_no == user_instance.user_no).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 메모가 없습니다.")
+            
+            memo, book = memo_book_instance
+
+            result = {
+                    'id': memo.id,
+                    'book_no': memo.book_no,
+                    'book_title': book.book_title,
+                    'book_author': book.book_author,
+                    'book_publisher': book.book_publisher,
+                    'memo_content': memo.memo_content,
+                    'memo_created_at': memo.memo_created_at
+            }
+            
+            return DataResp(resp_code=200, resp_msg="메모 상세 조회 성공", data=result)
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+
+    @session_wrapper
+    def like_memo(self, session, request, id:int):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not (
                 memo_instance := session.query(Book_Memo).filter(Book_Memo.id == id).first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 메모가 없습니다.")
             
-            result = {
-                    'id': memo_instance.id,
-                    'book_no': memo_instance.book_no,
-                    'memo_content': memo_instance.memo_content,
-            }
+            memo_instance.memo_like = not memo_instance.memo_like
             
-            return DataResp(resp_code=200, resp_msg="메모 상세 조회 성공", data=result)
+            session.add(memo_instance)
+            session.commit()
+            session.refresh(memo_instance)
+            
+            return HttpResp(resp_code=200, resp_msg="메모 즐겨찾기 추가/해제")
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,
