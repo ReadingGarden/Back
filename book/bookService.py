@@ -9,7 +9,7 @@ from sqlalchemy import asc, desc
 from auths.models import User
 from auths.tokenService import token_service
 from book import settings
-from book.models import Book, Book_Memo, Book_Read
+from book.models import Book, BookMemo, BookRead
 from cores.schema import DataResp, HttpResp
 
 from cores.utils import GenericPayload, session_wrapper
@@ -343,14 +343,14 @@ class BookService:
             }
             
             if (
-                book_read_query :=session.query(Book_Read)
-                .filter(Book_Read.book_no == book_no, Book_Read.user_no == user_instance.user_no)
+                book_read_query :=session.query(BookRead)
+                .filter(BookRead.book_no == book_no, BookRead.user_no == user_instance.user_no)
             ):
-                book_read_instance = book_read_query.order_by(Book_Read.created_at.desc()).first()
+                book_read_instance = book_read_query.order_by(BookRead.created_at.desc()).first()
                 result['percent'] = (book_read_instance.book_current_page/book.book_page)*100
                 result['book_current_page'] = book_read_instance.book_current_page
                 # 독서 기록 리스트                
-                book_read_instances = book_read_query.order_by(Book_Read.created_at.desc()).all()
+                book_read_instances = book_read_query.order_by(BookRead.created_at.desc()).all()
                 result['book_read_list'] = [
                     {
                         'id': book_read.id,
@@ -361,7 +361,7 @@ class BookService:
                     for book_read in book_read_instances
                 ]
             # 메모 리스트
-            memo_instance = session.query(Book_Memo).filter(Book_Memo.book_no == book.book_no).all()
+            memo_instance = session.query(BookMemo).filter(BookMemo.book_no == book.book_no).all()
             result['memo_list'] = [
                 {
                     'id': memo.id,
@@ -407,15 +407,15 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
             
-            new_Read = Book_Read(
+            new_Read = BookRead(
                 **payload,
                 user_no = user_instance.user_no
             )
 
             # 독서 기록 내역 없으면 상태를 읽는중으로 전환, 시작 날짜 추가
             if not (
-                session.query(Book_Read)
-                .filter(Book_Read.book_no == payload['book_no'], Book_Read.user_no == user_instance.user_no)
+                session.query(BookRead)
+                .filter(BookRead.book_no == payload['book_no'], BookRead.user_no == user_instance.user_no)
                 .first()
             ):
                 new_Read.book_start_date = datetime.now()
@@ -471,7 +471,7 @@ class BookService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
 
             if not (
-                book_read_instance := session.query(Book_Read).filter(Book_Read.id == id).first()
+                book_read_instance := session.query(BookRead).filter(BookRead.id == id).first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 기록이 없습니다.")
 
@@ -513,7 +513,7 @@ class BookService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
             
             
-            new_memo = Book_Memo(
+            new_memo = BookMemo(
                 **payload,
                 user_no = user_instance.user_no
             )
@@ -552,7 +552,7 @@ class BookService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             if not (
-                memo_instance := session.query(Book_Memo).filter(Book_Memo.id == id).first()
+                memo_instance := session.query(BookMemo).filter(BookMemo.id == id).first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 메모가 없습니다.")
             
@@ -599,7 +599,7 @@ class BookService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             if not (
-                memo_instance := session.query(Book_Memo).filter(Book_Memo.id == id).first()
+                memo_instance := session.query(BookMemo).filter(BookMemo.id == id).first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 메모가 없습니다.")
             
@@ -637,10 +637,10 @@ class BookService:
             
             # Memo, Book join
             memo_book_instance = (
-                session.query(Book_Memo, Book)
-                .join(Book, Book.book_no == Book_Memo.book_no)
-                .filter(Book_Memo.user_no == user_instance.user_no)
-                .order_by(Book_Memo.memo_like.desc(), Book_Memo.memo_created_at.desc())
+                session.query(BookMemo, Book)
+                .join(Book, Book.book_no == BookMemo.book_no)
+                .filter(BookMemo.user_no == user_instance.user_no)
+                .order_by(BookMemo.memo_like.desc(), BookMemo.memo_created_at.desc())
                 .all()
                 )
 
@@ -688,7 +688,7 @@ class BookService:
             
             if not (
                 # Memo, Book join
-                memo_book_instance := session.query(Book_Memo, Book).join(Book, Book.book_no == Book_Memo.book_no).filter(Book_Memo.user_no == user_instance.user_no).first()
+                memo_book_instance := session.query(BookMemo, Book).join(Book, Book.book_no == BookMemo.book_no).filter(BookMemo.user_no == user_instance.user_no).first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 메모가 없습니다.")
             
@@ -735,7 +735,7 @@ class BookService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             if not (
-                memo_instance := session.query(Book_Memo).filter(Book_Memo.id == id).first()
+                memo_instance := session.query(BookMemo).filter(BookMemo.id == id).first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 메모가 없습니다.")
             

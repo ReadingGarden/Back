@@ -19,7 +19,7 @@ class Book(BookBase, UtilModel):
     book_status = Column(Integer, nullable=False)
     book_page = Column(Integer, nullable=False)
 
-class Book_Read(BookBase, UtilModel):
+class BookRead(BookBase, UtilModel):
     __tablename__ = "BOOK_READ"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -30,7 +30,7 @@ class Book_Read(BookBase, UtilModel):
     book_end_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
-class Book_Memo(BookBase, UtilModel):
+class BookMemo(BookBase, UtilModel):
     __tablename__ = "BOOK_MEMO"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
