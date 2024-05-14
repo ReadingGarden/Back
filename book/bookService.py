@@ -359,7 +359,9 @@ class BookService:
             result['memo'] = [
                 {
                     'id': memo.id,
-                    'memo_content': memo.memo_content
+                    'memo_content': memo.memo_content,
+                    'memo_quote': memo.memo_quote,
+                    'memo_created_at': memo.memo_created_at
                 }
                 for memo in memo_instance
             ]
@@ -555,6 +557,7 @@ class BookService:
 
             memo_instance.book_no = payload['book_no']
             memo_instance.memo_content = payload['memo_content']
+            memo_instance.memo_quote = payload['memo_quote']
             
             session.add(memo_instance)
             session.commit()
@@ -642,6 +645,7 @@ class BookService:
                     'book_title': book.book_title,
                     'book_author': book.book_author,
                     'memo_content': memo.memo_content,
+                    'memo_quote': memo.memo_quote,
                     'memo_like': memo.memo_like,
                     'memo_created_at': memo.memo_created_at
                 }
@@ -691,6 +695,7 @@ class BookService:
                     'book_author': book.book_author,
                     'book_publisher': book.book_publisher,
                     'memo_content': memo.memo_content,
+                    'memo_quote': memo.memo_quote,
                     'memo_created_at': memo.memo_created_at
             }
             

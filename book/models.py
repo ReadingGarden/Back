@@ -37,5 +37,6 @@ class Book_Memo(BookBase, UtilModel):
     book_no = Column(String(30), nullable=False)
     user_no = Column(Integer, nullable=False)
     memo_content = Column(Text, nullable=False)
+    memo_quote = Column(Text, nullable=True)
     memo_like = Column(Boolean, nullable=False, default=False)    
     memo_created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
