@@ -14,6 +14,7 @@ from tzlocal import get_localzone
 
 from auths.models import RefreshToken, User
 from book import settings
+from book.models import Book
 from cores.schema import DataResp, HttpResp, ServiceError
 from cores.utils import GenericPayload, send_email, session_wrapper, generate_random_string, generate_random_nick, reset_auth_number
 from auths.tokenService import token_service
@@ -43,9 +44,6 @@ scheduler.start()
 class AuthService:
     @session_wrapper
     def create_user(self, session, payload: GenericPayload):
-        """
-        유저 회원가입
-        """
         try:
             if payload['user_social_id']:
                 # 소셜 가입 중복 확인
@@ -120,9 +118,6 @@ class AuthService:
 
     @session_wrapper
     def user_login(self, session, payload: GenericPayload) -> dict:
-        """
-        유저 로그인
-        """
         try:
             ph = PasswordHasher()
             # user_email, user_password = payload['user_email'], payload['user_password']
@@ -168,9 +163,6 @@ class AuthService:
         
     @session_wrapper
     def user_logout(self, session, request):
-        """
-        유저 로그아웃
-        """
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -215,9 +207,6 @@ class AuthService:
         
     @session_wrapper
     def refresh(self, session, payload: GenericPayload):
-        """
-        토큰 리프레시
-        """
         try:
         #     token = request.headers.get("Authorization")
         #     if token is not None:
@@ -237,9 +226,6 @@ class AuthService:
         
     @session_wrapper
     def user_delete(self, session, request):
-        """
-        유저 회원 탈퇴
-        """
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -276,9 +262,6 @@ class AuthService:
     def user_find_password(
         self, session, payload: GenericPayload
     ):
-        """
-        유저 비밀번호 인증 메일 전송
-        """
         try:
             if not (
                 user_instance := session.query(User)
@@ -322,9 +305,6 @@ class AuthService:
     def user_auth_check(
         self, session, payload: GenericPayload
     ):
-        """
-        유저 비밀번호 인증 확인
-        """
         try:
             user_instance = session.query(User).filter(User.user_email == payload['user_email']).first()
 
@@ -361,9 +341,6 @@ class AuthService:
     def get_user(
         self, session, request
     ):
-        """
-        유저 조회
-        """
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -379,7 +356,32 @@ class AuthService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
-            return DataResp(resp_code=200, resp_msg="조회 성공", data=user_instance.as_dict(exclude="user_password"))
+            # Garden 개수
+            garden_count = (
+                len(session.query(GardenUser).filter(GardenUser.user_no == user_instance.user_no).all())
+            )
+
+            book_query = session.query(Book).filter(Book.user_no == user_instance.user_no)
+            read_book_count = len(book_query.filter(Book.book_status == 1).all())
+            like_book_count = len(book_query.filter(Book.book_status == 2).all())
+
+            result = {
+                "user_no": user_instance.user_no,
+                "user_nick": user_instance.user_nick,
+                "user_email": user_instance.user_nick,
+                # "user_fcm": "string",
+                # "user_social_id": "string",
+                "user_social_type": user_instance.user_social_type,
+                "user_image": user_instance.user_image,
+                "user_created_at": user_instance.user_created_at,
+                "garden_count": garden_count,
+                "read_book_count": read_book_count,
+                "like_book_count": like_book_count,
+            }
+
+            
+            
+            return DataResp(resp_code=200, resp_msg="조회 성공", data=result)
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,
@@ -394,9 +396,6 @@ class AuthService:
     def update_user(
         self, session, request, payload: GenericPayload
     ):
-        """
-        프로필 수정
-        """
         try:
             token = request.headers.get("Authorization")
             if token is not None:
