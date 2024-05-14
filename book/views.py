@@ -10,7 +10,7 @@ from cores.utils import RETURN_FUNC
 logger = logging.getLogger("django.server")
 router = Router(tags=["book"])
 
-class CreateBookShecma(Schema, BaseModel):
+class CreateBookShema(Schema, BaseModel):
     book_no: str = Field(..., alias="book_no")
     garden_no: int = Field(..., alias="garden_no")
     book_title: str = Field(..., alias="book_title")
@@ -19,7 +19,7 @@ class CreateBookShecma(Schema, BaseModel):
     book_status: int = Field(..., alias="book_status")
     book_page: int = Field(...,alias="book_page")
 
-class PutBookShecma(Schema, BaseModel):
+class PutBookShema(Schema, BaseModel):
     garden_no: int = Field(..., alias="garden_no", )
     book_title: str = Field(..., alias="book_title")
     book_author: str = Field(..., alias="book_author")
@@ -27,9 +27,14 @@ class PutBookShecma(Schema, BaseModel):
     book_status: int = Field(..., alias="book_status")
     #TODO: - 총 페이지 수정도 포함?
 
-class CreateReadShecma(Schema, BaseModel):
+class CreateReadShema(Schema, BaseModel):
     book_no: str = Field(..., alias="book_no")
     book_current_page: int = Field(..., alias="book_current_page")
+
+class CreateMemoShema(Schema, BaseModel):
+    book_no: str = Field(..., alias="book_no")
+    memo_content: str = Field(..., alias="memo_content")
+
 
 @router.get(
     "/",
@@ -79,7 +84,7 @@ def get_book_detail(request, query: str):
     response={201: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="책 등록"
 )
-def create_book(request, form:CreateBookShecma):
+def create_book(request, form:CreateBookShema):
     """
     * book_no: ISBN13 입력 (9788937462788)
     """
@@ -107,7 +112,7 @@ def delete_book(request, book_no:str):
     response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="책 수정"
 )
-def update_book(request, form:PutBookShecma, book_no: str):
+def update_book(request, form:PutBookShema, book_no: str):
     """
     * book_no: ISBN13 입력 (9788937462788)
     """
@@ -144,7 +149,7 @@ def get_read(request, book_no:str):
     response={201: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="독서 기록 추가"
 )
-def create_read(request, form:CreateReadShecma):
+def create_read(request, form:CreateReadShema):
     logger.info(f"Call create_read API")
     return RETURN_FUNC(book_service.create_read(request, form.dict()))
 
@@ -157,6 +162,16 @@ def create_read(request, form:CreateReadShecma):
 def delete_read(request, id: int):
     logger.info(f"Call delete_read API")
     return RETURN_FUNC(book_service.delete_read(request, id))
+
+@router.post(
+    "/memo",
+    auth=UserAuth(),
+    response={201: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="메모 추가"
+)
+def create_memo(request, form:CreateMemoShema):
+    logger.info(f"Call create_memo API")
+    return RETURN_FUNC(book_service.delete_read(request, form.dict()))
 
 
 

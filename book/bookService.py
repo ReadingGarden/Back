@@ -9,7 +9,7 @@ from sqlalchemy import desc
 from auths.models import User
 from auths.tokenService import token_service
 from book import settings
-from book.models import Book, Book_Read
+from book.models import Book, Book_Memo, Book_Read
 from cores.schema import DataResp, HttpResp
 
 from cores.utils import GenericPayload, session_wrapper
@@ -184,7 +184,7 @@ class BookService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             if not (
-                book_instance := session.query(Book).filter(Book.book_no ==  book_no, Book.user_no == user_instance.user_no).first()
+                book_instance := session.query(Book).filter(Book.book_no == book_no, Book.user_no == user_instance.user_no).first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
             
@@ -221,7 +221,7 @@ class BookService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             if not (
-                book_instance := session.query(Book).filter(Book.book_no ==  book_no, Book.user_no == user_instance.user_no).first()
+                book_instance := session.query(Book).filter(Book.book_no == book_no, Book.user_no == user_instance.user_no).first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
             
@@ -473,6 +473,48 @@ class BookService:
             logger.error(e)
             raise e
 
+
+    @session_wrapper
+    def create_memo(self, session, request, payload: GenericPayload):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not (
+                session.query(Book).filter(Book.book_no == payload['book_no'], Book.user_no == user_instance.user_no).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
+            
+            
+            new_memo = Book_Memo(
+                **payload
+            )
+
+            session.add(new_memo)
+            session.commit()
+            session.refresh(new_memo)
+            
+            return HttpResp(resp_code=201, resp_msg="메모 추가 성공")
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
         
 
 book_service = BookService()
