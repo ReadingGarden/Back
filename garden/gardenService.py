@@ -1,7 +1,7 @@
 import logging
 import jwt
 
-from sqlalchemy import asc, desc
+from sqlalchemy import asc, case, desc
 from auths.models import User
 from auths.tokenService import token_service
 from book.models import Book, Book_Read
@@ -140,11 +140,15 @@ class GardenService:
 
             result['book_list'] = book_list
 
-
+            #TODO: - 정렬하기 
             # GardenUser, User join
             garden_members_instance = (
                 session.query(GardenUser, User).join(User, User.user_no == GardenUser.user_no)
                 .filter(GardenUser.garden_no == garden_no)
+                .order_by(
+                    GardenUser.garden_leader.desc(),
+                    GardenUser.garden_sign_date.asc()
+                )
                 .all()
             )
 
@@ -162,8 +166,6 @@ class GardenService:
                  )
 
             result['garden_members'] = garden_members_list
-
-            
 
             return DataResp(
                 resp_code=200, resp_msg="가든 상세 조회 성공", data=result)
@@ -392,7 +394,7 @@ class GardenService:
         
 
     @session_wrapper
-    def put_garden_leader(self, session, request, garden_no: int, user_no:int):
+    def update_garden_leader(self, session, request, garden_no: int, user_no:int):
         try:
             token = request.headers.get("Authorization")
             if token is not None:
