@@ -342,21 +342,27 @@ class BookService:
                 'user_no': book.user_no
             }
             
-
             if (
-                book_read_instance := session.query(Book_Read)
+                book_read_query :=session.query(Book_Read)
                 .filter(Book_Read.book_no == book_no, Book_Read.user_no == user_instance.user_no)
-                .order_by(desc(Book_Read.created_at))
-                .first()
             ):
-                result['book_current_page'] = book_read_instance.book_current_page
+                book_read_instance = book_read_query.order_by(Book_Read.created_at.desc()).first()
                 result['percent'] = (book_read_instance.book_current_page/book.book_page)*100
-
-
-            # TODO: - 메모 나머지
+                result['book_current_page'] = book_read_instance.book_current_page
+                # 독서 기록 리스트                
+                book_read_instances = book_read_query.order_by(Book_Read.created_at.desc()).all()
+                result['book_read_list'] = [
+                    {
+                        'id': book_read.id,
+                        'book_current_page': book_read.book_current_page,
+                        'book_start_date': book_read.book_start_date,
+                        'book_end_date': book_read.book_end_date,
+                    }
+                    for book_read in book_read_instances
+                ]
+            # 메모 리스트
             memo_instance = session.query(Book_Memo).filter(Book_Memo.book_no == book.book_no).all()
-
-            result['memo'] = [
+            result['memo_list'] = [
                 {
                     'id': memo.id,
                     'memo_content': memo.memo_content,
@@ -367,7 +373,7 @@ class BookService:
             ]
 
             
-            return DataResp(resp_code=200, resp_msg="책 기록 조회 성공", data=result)
+            return DataResp(resp_code=200, resp_msg="독서 기록 조회 성공", data=result)
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,
