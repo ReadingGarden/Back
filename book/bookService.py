@@ -1,6 +1,8 @@
 
 import json
 import logging
+import os
+import secrets
 import jwt
 import requests
 
@@ -9,7 +11,7 @@ from sqlalchemy import asc, desc
 from auths.models import User
 from auths.tokenService import token_service
 from book import settings
-from book.models import Book, BookMemo, BookRead
+from book.models import Book, BookMemo, BookRead, MemoImage
 from cores.schema import DataResp, HttpResp
 
 from cores.utils import GenericPayload, session_wrapper
@@ -407,7 +409,7 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
             
-            new_Read = BookRead(
+            new_read = BookRead(
                 **payload,
                 user_no = user_instance.user_no
             )
@@ -418,25 +420,25 @@ class BookService:
                 .filter(BookRead.book_no == payload['book_no'], BookRead.user_no == user_instance.user_no)
                 .first()
             ):
-                new_Read.book_start_date = datetime.now()
+                new_read.book_start_date = datetime.now()
                 book_instance.book_status = 0
                 session.add(book_instance)
 
             # 마지막 페이지 읽으면 상태를 읽음으로 전환, 마지막 날짜 기록
             if (
-                new_Read.book_current_page == book_instance.book_page
+                new_read.book_current_page == book_instance.book_page
             ):
-                new_Read.book_end_date = datetime.now()
+                new_read.book_end_date = datetime.now()
                 book_instance.book_status = 1
                 session.add(book_instance)  
 
-            session.add(new_Read)
+            session.add(new_read)
             session.commit()
             
             percent = 0
 
             if  book_instance.book_page > 0:
-                percent = (new_Read.book_current_page/book_instance.book_page)*100
+                percent = (new_read.book_current_page/book_instance.book_page)*100
             
             return DataResp(resp_code=201, resp_msg="책 기록 성공", data={
                 'book_current_page': payload['book_current_page'],
@@ -491,7 +493,7 @@ class BookService:
     
 
     @session_wrapper
-    def create_memo(self, session, request, payload: GenericPayload):
+    def create_memo(self, session, request, payload: GenericPayload, file):
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -512,7 +514,6 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
             
-            
             new_memo = BookMemo(
                 **payload,
                 user_no = user_instance.user_no
@@ -521,6 +522,43 @@ class BookService:
             session.add(new_memo)
             session.commit()
             session.refresh(new_memo)
+
+            # 파일 존재
+            if file is not None:
+                image_folder = settings.MEMO_IMAGE_DIR
+
+                try:
+                    os.mkdir(image_folder)
+                except FileExistsError:
+                    pass
+
+                if file.size > (5 * 1024 * 1024):
+                    return HttpResp(resp_code=400, resp_msg="이미지 용량은 5MB를 초과할 수 없습니다.")
+                
+                name, ext = os.path.splitext(file.name) # 파일 이름에서 확장자를 분리
+                image_name = secrets.token_urlsafe(16) + ext # URL 안전한 임의의    문자열을 생성
+                image_path = image_folder + "/" + image_name
+
+                with open(image_path, 'wb+') as f:
+                    for chunk in file.chunks():
+                        f.write(chunk)
+
+                image_url = 'memo/' + image_name
+
+                # 서버에 저장된 이미지 삭제
+                # os.remove(image_path)
+
+                new_image = MemoImage(
+                    memo_no = new_memo.id,
+                    image_name = file.name,
+                    image_url = image_url
+                )
+
+                print(new_image)
+
+                session.add(new_image)
+                session.commit()
+                session.refresh(new_image)
             
             return HttpResp(resp_code=201, resp_msg="메모 추가 성공")
         except (
@@ -644,7 +682,7 @@ class BookService:
                 .all()
                 )
 
-            result = [
+            result = [                
                 {
                     'id': memo.id,
                     'book_no': memo.book_no,
@@ -653,10 +691,18 @@ class BookService:
                     'memo_content': memo.memo_content,
                     'memo_quote': memo.memo_quote,
                     'memo_like': memo.memo_like,
+                    'image_url': (
+                        (image_instance.image_url if image_instance else '')
+                        if (image_instance := session.query(MemoImage)
+                            .filter(MemoImage.memo_no == memo.id)
+                            .first())
+                        else ''
+                    ),
                     'memo_created_at': memo.memo_created_at
                 }
                 for memo, book in memo_book_instance
             ]
+
             return DataResp(resp_code=200, resp_msg="메모 리스트 조회 성공", data=result)
         except (
             jwt.ExpiredSignatureError,
@@ -694,6 +740,9 @@ class BookService:
             
             memo, book = memo_book_instance
 
+            image_instance = session.query(MemoImage).filter(MemoImage.memo_no == id).first()
+            image_url = image_instance.image_url if image_instance else ''
+
             result = {
                     'id': memo.id,
                     'book_no': memo.book_no,
@@ -702,6 +751,7 @@ class BookService:
                     'book_publisher': book.book_publisher,
                     'memo_content': memo.memo_content,
                     'memo_quote': memo.memo_quote,
+                    'image_url': image_url,
                     'memo_created_at': memo.memo_created_at
             }
             
@@ -746,6 +796,71 @@ class BookService:
             session.refresh(memo_instance)
             
             return HttpResp(resp_code=200, resp_msg="메모 즐겨찾기 추가/해제")
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+
+    @session_wrapper
+    def upload_memo_image(self, session, request, file):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+
+            image_folder = settings.MEMO_IMAGE_DIR
+
+            try:
+                os.mkdir(image_folder)
+            except FileExistsError:
+                pass
+
+            if file.size > (5 * 1024 * 1024):
+                return HttpResp(resp_code=400, resp_msg="이미지 용량은 5MB를 초과할 수 없습니다.")
+                
+            name, ext = os.path.splitext(file.name) # 파일 이름에서 확장자를 분리
+            image_name = secrets.token_urlsafe(16) + ext # URL 안전한 임의의 문자열을 생성
+            image_path = image_folder + "/" + image_name
+
+            with open(image_path, 'wb+') as f:
+                for chunk in file.chunks():
+                    f.write(chunk)
+
+            image_url = 'memo/' + image_name
+
+            # 서버에 저장된 이미지 삭제
+            # os.remove(image_path)
+
+
+            new_image = MemoImage(
+                image_name = file.name,
+                image_url = image_url
+            )
+
+            print(new_image)
+
+            # session.add(new_image)
+            # session.commit()
+            # session.refresh(new_image)
+            
+            return HttpResp(resp_code=201, resp_msg="이미지 업로드 성공")
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,

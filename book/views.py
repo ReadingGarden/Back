@@ -1,5 +1,6 @@
 import logging
-from ninja import Router, Schema
+from ninja import File, Router, Schema
+from ninja.files import UploadedFile
 from pydantic import BaseModel, Field
 from auths.permissions import UserAuth
 from book.bookService import book_service
@@ -170,9 +171,9 @@ def delete_read(request, id: int):
     response={201: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="메모 추가"
 )
-def create_memo(request, form:MemoShema):
+def create_memo(request, form:MemoShema, file: UploadedFile = File(None)):
     logger.info(f"Call create_memo API")
-    return RETURN_FUNC(book_service.create_memo(request, form.dict()))
+    return RETURN_FUNC(book_service.create_memo(request, form.dict(), file))
 
 @router.put(
     "/memo",
@@ -223,6 +224,17 @@ def get_memo_detail(request, id:int):
 def like_memo(request, id:int):
     logger.info(f"Call like_memo API")
     return RETURN_FUNC(book_service.like_memo(request, id))
+
+@router.post(
+    "/memo/image",
+    auth=UserAuth(),
+    response={201: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="메모 이미지 업로드",
+    deprecated=True
+)
+def upload_memo_image(request, file: UploadedFile = File(...)):
+    logger.info(f"Call upload_memo_image API")
+    return RETURN_FUNC(book_service.upload_memo_image(request, file))
 
 
 
