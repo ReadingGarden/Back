@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
 import pymysql
 import environ
 
@@ -29,6 +30,7 @@ environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+MEMO_IMAGE_DIR = str(BASE_DIR.parent) + '/book/images/memo'
 
 
 # Quick-start development settings - unsuitable for production
@@ -54,7 +56,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",
+    # "django.contrib.staticfiles",
 ]
 
 MIDDLEWARE = [
@@ -164,7 +166,12 @@ ALADIN_TTBKEY = env("ALADIN_TTBKEY")
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = "static/"
+# STATIC_URL = "static/"
+# 미디어 파일을 저장할 디렉토리 경로
+MEDIA_ROOT = os.path.join(BASE_DIR, 'images')
+# 미디어 파일에 접근할 URL 경로
+MEDIA_URL = '/images/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
