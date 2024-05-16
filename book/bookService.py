@@ -604,6 +604,14 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 메모가 없습니다.")
             
+            if (
+                image_instance := session.query(MemoImage)
+                .filter(MemoImage.memo_no == id)
+                .first()
+            ):
+                session.delete(image_instance)
+                session.commit()
+            
             session.delete(memo_instance)
             session.commit()
             
