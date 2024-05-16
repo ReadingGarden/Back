@@ -11,7 +11,7 @@ from cores.schema import DataResp, HttpResp, ServiceError
 from cores.utils import RETURN_FUNC
 
 logger = logging.getLogger("django.server")
-router = Router(tags=["auth_user"])
+router = Router(tags=["auth"])
 
 class CreateUserSchema(Schema, BaseModel):
     user_email: str = Field("", alias="user_email", pattern=r"^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$")
