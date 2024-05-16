@@ -171,9 +171,9 @@ def delete_read(request, id: int):
     response={201: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="메모 추가"
 )
-def create_memo(request, form:MemoShema, file: UploadedFile = File(None)):
+def create_memo(request, form:MemoShema):
     logger.info(f"Call create_memo API")
-    return RETURN_FUNC(book_service.create_memo(request, form.dict(), file))
+    return RETURN_FUNC(book_service.create_memo(request, form.dict()))
 
 @router.put(
     "/memo",
@@ -183,8 +183,8 @@ def create_memo(request, form:MemoShema, file: UploadedFile = File(None)):
 )
 def update_memo(request, form:MemoShema, id:int):
     logger.info(f"Call update_memo API")
-    return RETURN_FUNC(book_service.update_memo(request, form.dict(), id))
-
+    return RETURN_FUNC(book_service.update_memo(request, id, form.dict()))
+ 
 @router.delete(
     "/memo",
     auth=UserAuth(),
@@ -230,11 +230,10 @@ def like_memo(request, id:int):
     auth=UserAuth(),
     response={201: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="메모 이미지 업로드",
-    deprecated=True
 )
-def upload_memo_image(request, file: UploadedFile = File(...)):
+def upload_memo_image(request, id:int, file: UploadedFile = File(...)):
     logger.info(f"Call upload_memo_image API")
-    return RETURN_FUNC(book_service.upload_memo_image(request, file))
+    return RETURN_FUNC(book_service.upload_memo_image(request, id, file))
 
 
 

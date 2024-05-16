@@ -493,7 +493,7 @@ class BookService:
     
 
     @session_wrapper
-    def create_memo(self, session, request, payload: GenericPayload, file):
+    def create_memo(self, session, request, payload: GenericPayload):
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -523,43 +523,6 @@ class BookService:
             session.commit()
             session.refresh(new_memo)
 
-            # 파일 존재
-            if file is not None:
-                image_folder = settings.MEMO_IMAGE_DIR
-
-                try:
-                    os.mkdir(image_folder)
-                except FileExistsError:
-                    pass
-
-                if file.size > (5 * 1024 * 1024):
-                    return HttpResp(resp_code=400, resp_msg="이미지 용량은 5MB를 초과할 수 없습니다.")
-                
-                name, ext = os.path.splitext(file.name) # 파일 이름에서 확장자를 분리
-                image_name = secrets.token_urlsafe(16) + ext # URL 안전한 임의의    문자열을 생성
-                image_path = image_folder + "/" + image_name
-
-                with open(image_path, 'wb+') as f:
-                    for chunk in file.chunks():
-                        f.write(chunk)
-
-                image_url = 'memo/' + image_name
-
-                # 서버에 저장된 이미지 삭제
-                # os.remove(image_path)
-
-                new_image = MemoImage(
-                    memo_no = new_memo.id,
-                    image_name = file.name,
-                    image_url = image_url
-                )
-
-                print(new_image)
-
-                session.add(new_image)
-                session.commit()
-                session.refresh(new_image)
-            
             return HttpResp(resp_code=201, resp_msg="메모 추가 성공")
         except (
             jwt.ExpiredSignatureError,
@@ -606,7 +569,7 @@ class BookService:
             session.add(memo_instance)
             session.commit()
             session.refresh(memo_instance)
-            
+                
             return HttpResp(resp_code=200, resp_msg="메모 수정 성공")
         except (
             jwt.ExpiredSignatureError,
@@ -808,7 +771,7 @@ class BookService:
         
 
     @session_wrapper
-    def upload_memo_image(self, session, request, file):
+    def upload_memo_image(self, session, request, id:int, file):
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -824,7 +787,22 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
+            if not (
+                memo_instance := session.query(BookMemo).filter(BookMemo.id == id).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 메모가 없습니다.")
 
+            # 해당 메모에 이미지 있으면
+            if (
+                image_instance := session.query(MemoImage)
+                .filter(MemoImage.memo_no == id)
+                .first()
+            ):  
+                # 서버, DB 저장된 이미지 삭제
+                os.remove('images/'+image_instance.image_url)
+                session.delete(image_instance)
+                session.commit()
+            
             image_folder = settings.MEMO_IMAGE_DIR
 
             try:
@@ -845,21 +823,16 @@ class BookService:
 
             image_url = 'memo/' + image_name
 
-            # 서버에 저장된 이미지 삭제
-            # os.remove(image_path)
-
-
             new_image = MemoImage(
+                memo_no = id,
                 image_name = file.name,
                 image_url = image_url
             )
 
-            print(new_image)
+            session.add(new_image)
+            session.commit()
+            session.refresh(new_image)
 
-            # session.add(new_image)
-            # session.commit()
-            # session.refresh(new_image)
-            
             return HttpResp(resp_code=201, resp_msg="이미지 업로드 성공")
         except (
             jwt.ExpiredSignatureError,

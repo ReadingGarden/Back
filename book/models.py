@@ -47,6 +47,6 @@ class MemoImage(BookBase, UtilModel):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     memo_no = Column(Integer, nullable=False)
-    image_name = Column(String(30), nullable=False)
+    image_name = Column(Text, nullable=False)
     image_url = Column(Text, nullable=False)
     image_created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
