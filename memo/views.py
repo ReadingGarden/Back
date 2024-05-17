@@ -20,7 +20,7 @@ class MemoShema(Schema, BaseModel):
 @router.post(
     "/",
     auth=UserAuth(),
-    response={201: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    response={201: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="메모 추가"
 )
 def create_memo(request, form:MemoShema):

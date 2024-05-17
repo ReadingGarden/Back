@@ -48,7 +48,9 @@ class MemoService:
             session.commit()
             session.refresh(new_memo)
 
-            return HttpResp(resp_code=201, resp_msg="메모 추가 성공")
+            return DataResp(resp_code=201, resp_msg="메모 추가 성공", data={
+                'id': new_memo.id
+            })
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,
