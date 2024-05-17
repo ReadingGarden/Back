@@ -15,7 +15,6 @@ router = Router(tags=["auth"])
 
 class CreateUserSchema(Schema, BaseModel):
     user_email: str = Field("", alias="user_email", pattern=r"^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$")
-    # user_nick: str =Field(..., alias="user_nick")
     user_password: str = Field(..., alias="user_password")
     user_fcm: str = Field("", alias="use_fcm")
     user_social_id: str = Field("", alias="user_social_id")
@@ -36,7 +35,6 @@ class UserPasswordAuthSchema(Schema, BaseModel):
     auth_number: str = Field(..., alias="auth_number")
 
 class UpdateUserSchema(Schema, BaseModel):
-    # user_email: str = Field(..., alias="user_email")
     user_nick: str = Field("", alias="user_nick")
     user_image: str = Field("image1", alias="user_image")
 
