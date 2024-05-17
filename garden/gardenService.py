@@ -110,6 +110,8 @@ class GardenService:
                 .all()
             )
             
+            book_list = []
+
             #TODO - 나무 타입
             for book in book_instance:
                 percent = 0
@@ -121,22 +123,18 @@ class GardenService:
                     .first()
                 ):
                     percent = (book_read_instance.book_current_page/book.book_page)*100
-
-                book_list = [
-                {
-                    'book_no': book.book_no,
-                    'book_title': book.book_title,
-                    # 'book_author': book.book_author,
-                    # 'book_publisher': book.book_publisher,
-                    'book_status': book.book_status,
-                    'percent': percent,
-                    'user_no': book.user_no
-                    # 'book_page': book.book_page
-                }
-                for book in book_instance
-            ]
                 
-
+                book_list.append({
+                        'book_no': book.book_no,
+                        'book_isbn': book.book_isbn,
+                        'book_title': book.book_title,
+                        # 'book_author': book.book_author,
+                        # 'book_publisher': book.book_publisher,
+                        'book_status': book.book_status,
+                        'percent': percent,
+                        'user_no': book.user_no
+                        # 'book_page': book.book_page
+                        })
 
             result['book_list'] = book_list
 

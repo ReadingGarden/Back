@@ -10,7 +10,8 @@ class BookBase(DeclarativeBase):
 class Book(BookBase, UtilModel):
     __tablename__ = "BOOK"
 
-    book_no = Column(String(30), primary_key=True)
+    book_no = Column(Integer, primary_key=True)
+    book_isbn = Column(String(30), nullable=True)
     garden_no = Column(Integer, nullable=False)
     user_no = Column(Integer, nullable=False)
     book_title = Column(String(100), nullable=False)
@@ -23,7 +24,7 @@ class BookRead(BookBase, UtilModel):
     __tablename__ = "BOOK_READ"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    book_no = Column(String(30), nullable=False)
+    book_no = Column(Integer, nullable=False)
     user_no = Column(Integer, nullable=False)
     book_current_page = Column(Integer, nullable=False)
     book_start_date = Column(DateTime(timezone=True), nullable=True)

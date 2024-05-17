@@ -12,7 +12,7 @@ logger = logging.getLogger("django.server")
 router = Router(tags=["memo"])
 
 class MemoShema(Schema, BaseModel):
-    book_no: str = Field(..., alias="book_no")
+    book_no: int = Field(..., alias="book_no")
     memo_content: str = Field(..., alias="memo_content")
     memo_quote: str = Field(..., alias="memo_quote")
 

@@ -10,7 +10,7 @@ class Memo(MemoBase, UtilModel):
     __tablename__ = "MEMO"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    book_no = Column(String(30), nullable=False)
+    book_no = Column(Integer, nullable=False)
     user_no = Column(Integer, nullable=False)
     memo_content = Column(Text, nullable=False)
     memo_quote = Column(Text, nullable=True)

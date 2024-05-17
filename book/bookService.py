@@ -21,9 +21,6 @@ logger = logging.getLogger("django.server")
 class BookService:
     @session_wrapper
     def get_book(self, session, request, query: str, start: int, maxResults: int):
-        """
-        책 검색
-        """
         try:
             KEY = settings.ALADIN_TTBKEY
             URL = f"http://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey={KEY}&Query={query}&QueryType=Keyword&MaxResults={maxResults}&start={start}&SearchTarget=BOOK&output=js&Version=20131101"
@@ -47,9 +44,6 @@ class BookService:
 
     @session_wrapper
     def get_isbn_book(self, session, request, query: str):
-        """
-        책 검색
-        """
         try:
             KEY = settings.ALADIN_TTBKEY
             URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&itemIdType=ISBN&ItemId={query}&output=js&Version=20131101&"
@@ -117,9 +111,6 @@ class BookService:
 
     @session_wrapper
     def create_book(self, session, request, payload: GenericPayload):
-        """
-        책 등록
-        """
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -167,7 +158,7 @@ class BookService:
         
 
     @session_wrapper
-    def delete_book(self, session, request, book_no: str):
+    def delete_book(self, session, request, book_no: int):
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -204,7 +195,7 @@ class BookService:
         
 
     @session_wrapper
-    def update_book(self, session, request, payload:GenericPayload,  book_no:str):
+    def update_book(self, session, request, payload:GenericPayload,  book_no:int):
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -302,7 +293,7 @@ class BookService:
             raise e
     
     @session_wrapper
-    def get_read(self, session, request, book_no:str):
+    def get_read(self, session, request, book_no:int):
         try:
             token = request.headers.get("Authorization")
             if token is not None:

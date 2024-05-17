@@ -12,7 +12,7 @@ logger = logging.getLogger("django.server")
 router = Router(tags=["book"])
 
 class CreateBookShema(Schema, BaseModel):
-    book_no: str = Field(..., alias="book_no")
+    book_isbn: str = Field(None, alias="book_isbn")
     garden_no: int = Field(..., alias="garden_no")
     book_title: str = Field(..., alias="book_title")
     book_author: str = Field(..., alias="book_author")
@@ -29,7 +29,7 @@ class UpdateBookShema(Schema, BaseModel):
     #TODO: - 총 페이지 수정도 포함?
 
 class CreateReadShema(Schema, BaseModel):
-    book_no: str = Field(..., alias="book_no")
+    book_no: int = Field(..., alias="book_no")
     book_current_page: int = Field(..., alias="book_current_page")
 
 
@@ -83,7 +83,7 @@ def get_book_detail(request, query: str):
 )
 def create_book(request, form:CreateBookShema):
     """
-    * book_no: ISBN13 입력 (9788937462788)
+    * book_isbn: ISBN13 입력 (9788937462788)
     """
     logger.info(f"Call post_book API")
     return RETURN_FUNC(book_service.create_book(request, form.dict()))
@@ -95,10 +95,7 @@ def create_book(request, form:CreateBookShema):
     response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="책 삭제"
 )
-def delete_book(request, book_no:str):
-    """
-    * book_no: ISBN13 입력 (9788937462788)
-    """
+def delete_book(request, book_no:int):
     logger.info(f"Call delete_book API")
     return RETURN_FUNC(book_service.delete_book(request, book_no))
 
@@ -109,10 +106,7 @@ def delete_book(request, book_no:str):
     response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="책 수정"
 )
-def update_book(request, form:UpdateBookShema, book_no: str):
-    """
-    * book_no: ISBN13 입력 (9788937462788)
-    """
+def update_book(request, form:UpdateBookShema, book_no: int):
     logger.info(f"Call update_book API")
     return RETURN_FUNC(book_service.update_book(request, form.dict(),  book_no))
 
@@ -136,7 +130,7 @@ def get_book_status(request, garden_no:int=None, status:int=0):
     response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="독서 기록 조회"
 )
-def get_read(request, book_no:str):
+def get_read(request, book_no:int):
     logger.info(f"Call get_read API")
     return RETURN_FUNC(book_service.get_read(request, book_no))
 
