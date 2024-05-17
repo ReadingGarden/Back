@@ -17,6 +17,7 @@ class Book(BookBase, UtilModel):
     book_title = Column(String(100), nullable=False)
     book_author = Column(String(100), nullable=False)
     book_publisher = Column(String(100), nullable=False)
+    book_tree = Column(String(30), nullable=False)
     book_status = Column(Integer, nullable=False)
     book_page = Column(Integer, nullable=False)
 

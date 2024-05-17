@@ -220,6 +220,7 @@ class BookService:
             book_instance.book_title = payload['book_title']
             book_instance.book_author = payload['book_author']
             book_instance.book_publisher = payload['book_publisher']
+            book_instance.book_tree = payload['book_tree']
             book_instance.book_status = payload['book_status']
 
             session.add(book_instance)
@@ -267,13 +268,13 @@ class BookService:
 
             book_instance = book_query.all()
 
-            #TODO - 나머지도
             result = [
                 {
                     'book_no': book.book_no,
                     'book_title': book.book_title,
                     'book_author': book.book_author,
                     'book_publisher': book.book_publisher,
+                    'book_tree': book.book_tree,
                     'book_status': book.book_status,
                     'book_page': book.book_page,
                     'garden_no': book.garden_no,
@@ -326,6 +327,7 @@ class BookService:
                 'book_title': book.book_title,
                 'book_author': book.book_author,
                 'book_publisher': book.book_publisher,
+                'book_tree': book.book_tree,
                 'book_status': book.book_status,
                 'book_page': book.book_page,
                 'book_current_page': 0,

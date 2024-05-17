@@ -17,6 +17,7 @@ class CreateBookShema(Schema, BaseModel):
     book_title: str = Field(..., alias="book_title")
     book_author: str = Field(..., alias="book_author")
     book_publisher: str = Field(..., alias="book_publisher")
+    book_tree: str = Field(..., alias="book_tree")
     book_status: int = Field(..., alias="book_status")
     book_page: int = Field(...,alias="book_page")
 
@@ -25,6 +26,7 @@ class UpdateBookShema(Schema, BaseModel):
     book_title: str = Field(..., alias="book_title")
     book_author: str = Field(..., alias="book_author")
     book_publisher: str = Field(..., alias="book_publisher")
+    book_tree: str = Field(..., alias="book_tree")
     book_status: int = Field(..., alias="book_status")
     #TODO: - 총 페이지 수정도 포함?
 
@@ -34,7 +36,7 @@ class CreateReadShema(Schema, BaseModel):
 
 
 @router.get(
-    "/",
+    "/search",
     auth=UserAuth(),
     response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="책 검색"
@@ -48,7 +50,7 @@ def get_book(request, query: str, start: int=1, maxResults: int=100):
     return RETURN_FUNC(book_service.get_book(request, query, start, maxResults))
 
 @router.get(
-    "/isbn",
+    "/search-isbn",
     auth=UserAuth(),
     response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="책 검색(ISBN)"
@@ -62,7 +64,7 @@ def get_isbn_book(request, query: str,):
 
 
 @router.get(
-    "/detail",
+    "/detail-isbn",
     auth=UserAuth(),
     response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="책 상세 조회"
@@ -153,6 +155,16 @@ def create_read(request, form:CreateReadShema):
 def delete_read(request, id: int):
     logger.info(f"Call delete_read API")
     return RETURN_FUNC(book_service.delete_read(request, id))
+
+# @router.post(
+#     "/image",
+#     auth=UserAuth(),
+#     response={201: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+#     summary="책 이미지 업로드",
+# )
+# def upload_book_image(request, book_no:int, file: UploadedFile = File(...)):
+#     logger.info(f"Call upload_book_image API")
+#     return RETURN_FUNC(book_service.upload_book_image(request, book_no, file))
 
 
 
