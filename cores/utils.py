@@ -1,15 +1,16 @@
-from email.message import EmailMessage
-from functools import wraps
 import random
 import smtplib
 import string
-from typing import TypeVar
 
 import logging
 import jwt
 
+from passlib.context import CryptContext
+from functools import wraps
+from typing import TypeVar
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
+from email.message import EmailMessage
 
 from book import settings
 from cores.schema import HttpResp
@@ -95,5 +96,16 @@ def generate_random_nick() -> str:
     
     nick = random.choice(a) + random.choice(b)
     return nick
+
+
+# 암호화 컨텍스트 설정
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# 비밀번호 암호화
+def hash_password(password):
+    return pwd_context.hash(password)
+# 비밀번호 검증
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+    
 
 RETURN_FUNC = lambda r: (r.resp_code, r)

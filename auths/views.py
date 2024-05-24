@@ -39,7 +39,7 @@ class UpdateUserSchema(Schema, BaseModel):
     user_image: str = Field("image1", alias="user_image")
 
 class UpdateUserPasswordSchema(Schema, BaseModel):
-    user_email: str = Field(..., alias="user_email")
+    user_email: str = Field(None, alias="user_email")
     user_password: str = Field(..., alias="user_password")
 
 class RefreshTokenSchema(Schema, BaseModel):
@@ -56,7 +56,6 @@ def create_user(request, form: CreateUserSchema):
     logger.info(f"user signup {form.dict(exclude={'user_password'})}")
     return RETURN_FUNC(auth_service.create_user(form.dict()))
 
-
 @router.post(
    "/login",
    response={200: DataResp, 400: HttpResp, 500: HttpResp},
@@ -68,7 +67,6 @@ def login(request, form: LoginUserSchema):
    """
    logger.info(f"Call login API {form.dict(exclude={'user_password'})})")
    return RETURN_FUNC(auth_service.user_login(form.dict()))
-
 
 @router.post(
    "/logout",
@@ -83,7 +81,6 @@ def logout(request):
    logger.info(f"Call logout API")
    return RETURN_FUNC(auth_service.user_logout(request))
 
-
 @router.post(
     "/refresh",
     response={200: DataResp, 401: HttpResp, 500: HttpResp},
@@ -95,8 +92,6 @@ def refresh(request, form: RefreshTokenSchema):
     """
     logger.info("Call refresh API")
     return RETURN_FUNC(token_service.refresh(form.dict()))
-    # return RETURN_FUNC(auth_service.refresh(form.dict()))
-
 
 @router.delete(
    "/",
@@ -135,18 +130,28 @@ def auth_check(request, form: UserPasswordAuthSchema):
     """
     return RETURN_FUNC(auth_service.user_auth_check(form.dict()))
 
-
-@router.post(
+@router.put(
     "/find-password/update-password",
-    response={200: DataResp, 400: HttpResp, 403: HttpResp, 500: HttpResp},
+    response={200: HttpResp, 400: HttpResp, 403: HttpResp, 500: HttpResp},
     summary="유저 비밀번호 변경 (토큰 X)"
 )
-def update_password(request, form: UpdateUserPasswordSchema):
+def update_password_no_token(request, form: UpdateUserPasswordSchema):
     """
     Update Password No Token
     """
     return RETURN_FUNC(auth_service.user_update_password_no_token(form.dict()))
 
+@router.put(
+    "/update-password",
+    auth=UserAuth(),
+    response={200: HttpResp, 400: HttpResp, 403: HttpResp, 500: HttpResp},
+    summary="유저 비밀번호 변경 (토큰 O)"
+)
+def update_password(request, form: UpdateUserPasswordSchema):
+    """
+    Update Password With Token
+    """
+    return RETURN_FUNC(auth_service.user_update_password(request, form.dict()))
 
 @router.get(
     "/",
@@ -160,7 +165,6 @@ def get_user(request):
     """
     logger.info(f"Call get_user API")
     return RETURN_FUNC(auth_service.get_user(request))
-
 
 @router.put(
     "/",

@@ -1,4 +1,3 @@
-import hashlib
 import logging
 
 from argon2 import PasswordHasher
@@ -16,7 +15,7 @@ from auths.models import RefreshToken, User
 from book import settings
 from book.models import Book
 from cores.schema import DataResp, HttpResp, ServiceError
-from cores.utils import GenericPayload, send_email, session_wrapper, generate_random_string, generate_random_nick, reset_auth_number
+from cores.utils import GenericPayload, hash_password, send_email, session_wrapper, generate_random_string, generate_random_nick, reset_auth_number, verify_password
 from auths.tokenService import token_service
 from garden.models import Garden, GardenUser
 
@@ -62,12 +61,9 @@ class AuthService:
                 ):
                     return HttpResp(resp_code=409, resp_msg="이메일 중복")
                 
-            #TODO 비밀번호 암호화
             # 비밀번호 암호화
-            # password_md5 = hashlib.md(form["user_password"].encode().hexdigest().upper())
-            # password_hash = hashlib.sha512(password_md5.encode()).hexdigest()
-
-            # form["user_password"] = password_hash
+            hashed_password = hash_password(payload['user_password'])
+            payload["user_password"] = hashed_password
                 
             # 새로운 유저 객체 생성
             new_user = User(
@@ -135,13 +131,12 @@ class AuthService:
                     .first()
                 ):
                     return HttpResp(resp_code=400, resp_msg="등록되지 않은 이메일 주소입니다.")
+                # 비밀번호 암호화 검증
                 if not (
-                    user_instance.user_password == payload['user_password']
+                    verify_password(payload['user_password'], user_instance.user_password)
                 ):
                     return HttpResp(resp_code=400, resp_msg="비밀번호가 일치하지 않습니다.")
-            #TODO - 비밀번호 암호화
-            # ph.verify(user_instance.user_password, payload['user_password'])
-            
+                
             # 토큰 발급
             token_pair = token_service.generate_pair_token(user_instance)
 
@@ -326,12 +321,53 @@ class AuthService:
         try:
             user_instance = session.query(User).filter(User.user_email == payload['user_email']).first()
             
-            user_instance.user_password = payload['user_password']
+            # 비밀번호 암호화
+            hashed_password = hash_password(payload['user_password'])
+            user_instance.user_password = hashed_password
 
             session.add(user_instance)
             session.commit()
             session.refresh(user_instance)
-            return DataResp(resp_code=200, resp_msg="비밀번호 변경 성공", data={})
+            return HttpResp(resp_code=200, resp_msg="비밀번호 변경 성공")
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+    @session_wrapper
+    def user_update_password(
+        self, session, request, payload: GenericPayload
+    ):
+        """
+        유저 비밀번호 변경 (토큰 O)
+        """
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            hashed_password = hash_password(payload['user_password'])
+            user_instance.user_password = hashed_password
+
+            session.add(user_instance)
+            session.commit()
+            session.refresh(user_instance)
+            return HttpResp(resp_code=200, resp_msg="비밀번호 변경 성공")
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
         except Exception as e:
             logger.error(e)
             raise e
