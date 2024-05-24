@@ -181,6 +181,16 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
             
+            if (
+                image_instance := session.query(BookImage)
+                .filter(BookImage.book_no == book_no)
+                .first()
+            ):
+                # 서버, DB 저장된 이미지 삭제
+                os.remove('images/'+image_instance.image_url)
+                session.delete(image_instance)
+                session.commit()
+            
             session.delete(book_instance)
             session.commit()
 
@@ -277,6 +287,14 @@ class BookService:
                     'book_title': book.book_title,
                     'book_author': book.book_author,
                     'book_publisher': book.book_publisher,
+                    'book_image_url': book.book_image_url,
+                    'book_image_url2': (
+                        (image_instance.image_url if image_instance else '')
+                            if (image_instance := session.query(BookImage)
+                                .filter(BookImage.book_no == book.book_no)
+                                .first())
+                            else None
+                    ),
                     'book_tree': book.book_tree,
                     'book_status': book.book_status,
                     'book_page': book.book_page,
@@ -324,12 +342,19 @@ class BookService:
             
             book, garden = book_garden_instance
 
-            # TODO - 이미지 추가
             result = {
                 'garden_title': garden.garden_title,
                 'book_title': book.book_title,
                 'book_author': book.book_author,
                 'book_publisher': book.book_publisher,
+                'book_image_url': book.book_image_url,
+                'book_image_url2': (
+                    (image_instance.image_url if image_instance else '')
+                        if (image_instance := session.query(BookImage)
+                            .filter(BookImage.book_no == book.book_no)
+                            .first())
+                        else None
+                ),
                 'book_tree': book.book_tree,
                 'book_status': book.book_status,
                 'book_page': book.book_page,
@@ -340,7 +365,7 @@ class BookService:
             
             if (
                 book_read_query :=session.query(BookRead)
-                .filter(BookRead.book_no == book_no, BookRead.user_no == user_instance.user_no)
+                .filter(BookRead.book_no == book_no, BookRead.user_no == user_instance.user_no).first()
             ):
                 book_read_instance = book_read_query.order_by(BookRead.created_at.desc()).first()
                 result['percent'] = (book_read_instance.book_current_page/book.book_page)*100

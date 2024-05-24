@@ -123,6 +123,8 @@ def update_book(request, form:UpdateBookShema, book_no: int):
 )
 def get_book_status(request, garden_no:int=None, status:int=0):
     """
+    * book_image_url: 알라딘 표지
+    * book_image_url2: 자체 표지
     * status: 0읽는중, 1읽은책, 2읽고싶은책
     """
     logger.info(f"Call get_book_status API")
@@ -135,6 +137,10 @@ def get_book_status(request, garden_no:int=None, status:int=0):
     summary="독서 기록 조회"
 )
 def get_read(request, book_no:int):
+    """
+    * book_image_url: 알라딘 표지
+    * book_image_url2: 자체 표지
+    """
     logger.info(f"Call get_read API")
     return RETURN_FUNC(book_service.get_read(request, book_no))
 
