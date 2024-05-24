@@ -30,6 +30,7 @@ environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+BOOK_IMAGE_DIR = str(BASE_DIR.parent) + '/book/images/book'
 MEMO_IMAGE_DIR = str(BASE_DIR.parent) + '/book/images/memo'
 
 

@@ -18,6 +18,7 @@ class CreateBookShema(Schema, BaseModel):
     book_author: str = Field(..., alias="book_author")
     book_publisher: str = Field(..., alias="book_publisher")
     book_tree: str = Field(..., alias="book_tree")
+    book_image_url: str = Field(None, alias="book_image_url")
     book_status: int = Field(..., alias="book_status")
     book_page: int = Field(...,alias="book_page")
 
@@ -27,6 +28,7 @@ class UpdateBookShema(Schema, BaseModel):
     book_author: str = Field(..., alias="book_author")
     book_publisher: str = Field(..., alias="book_publisher")
     book_tree: str = Field(..., alias="book_tree")
+    book_image_url: str = Field(None, alias="book_image_url")
     book_status: int = Field(..., alias="book_status")
     #TODO: - 총 페이지 수정도 포함?
 
@@ -155,6 +157,26 @@ def create_read(request, form:CreateReadShema):
 def delete_read(request, id: int):
     logger.info(f"Call delete_read API")
     return RETURN_FUNC(book_service.delete_read(request, id))
+
+@router.post(
+    "/image",
+    auth=UserAuth(),
+    response={201: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="책 이미지 업로드",
+)
+def upload_book_image(request, book_no:int, file: UploadedFile = File(...)):
+    logger.info(f"Call upload_book_image API")
+    return RETURN_FUNC(book_service.upload_book_image(request, book_no, file))
+
+@router.delete(
+    "/image",
+    auth=UserAuth(),
+    response={201: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="책 이미지 삭제",
+)
+def delete_book_image(request, book_no:int):
+    logger.info(f"Call delete_book_image API")
+    return RETURN_FUNC(book_service.delete_book_image(request, book_no))
 
 # @router.post(
 #     "/image",

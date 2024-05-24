@@ -1,6 +1,8 @@
 
 import json
 import logging
+import os
+import secrets
 import jwt
 import requests
 
@@ -8,7 +10,7 @@ from datetime import datetime
 from auths.models import User
 from auths.tokenService import token_service
 from book import settings
-from book.models import Book, BookRead
+from book.models import Book, BookImage, BookRead
 from cores.schema import DataResp, HttpResp
 
 from cores.utils import GenericPayload, session_wrapper
@@ -221,6 +223,7 @@ class BookService:
             book_instance.book_author = payload['book_author']
             book_instance.book_publisher = payload['book_publisher']
             book_instance.book_tree = payload['book_tree']
+            book_instance.book_image_url = payload['book_image_url']
             book_instance.book_status = payload['book_status']
 
             session.add(book_instance)
@@ -472,6 +475,127 @@ class BookService:
             session.commit()
                 
             return HttpResp(resp_code=200, resp_msg="책 기록 삭제 성공")
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
+
+    @session_wrapper
+    def upload_book_image(self, session, request, book_no:int, file):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not (
+                book_instance := session.query(Book).filter(Book.book_no == book_no).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 책이 없습니다.")
+
+            # 해당 책에 이미지 있으면
+            if (
+                image_instance := session.query(BookImage)
+                .filter(BookImage.book_no == book_no)
+                .first()
+            ):  
+                # 서버, DB 저장된 이미지 삭제
+                os.remove('images/'+image_instance.image_url)
+                session.delete(image_instance)
+                session.commit()
+            
+            image_folder = settings.BOOK_IMAGE_DIR
+
+            try:
+                os.mkdir(image_folder)
+            except FileExistsError:
+                pass
+
+            if file.size > (5 * 1024 * 1024):
+                return HttpResp(resp_code=400, resp_msg="이미지 용량은 5MB를 초과할 수 없습니다.")
+                
+            name, ext = os.path.splitext(file.name) # 파일 이름에서 확장자를 분리
+            image_name = secrets.token_urlsafe(16) + ext # URL 안전한 임의의 문자열을 생성
+            image_path = image_folder + "/" + image_name
+
+            with open(image_path, 'wb+') as f:
+                for chunk in file.chunks():
+                    f.write(chunk)
+
+            image_url = 'book/' + image_name
+
+            new_image = BookImage(
+                book_no = book_no,
+                image_name = file.name,
+                image_url = image_url
+            )
+
+            session.add(new_image)
+            session.commit()
+            session.refresh(new_image)
+
+            return HttpResp(resp_code=201, resp_msg="이미지 업로드 성공")
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+    
+    @session_wrapper
+    def delete_book_image(self, session, request, book_no:int):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not (
+                book_instance := session.query(Book).filter(Book.book_no == book_no).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 책이 없습니다.")
+
+            # 해당 책에 이미지 있으면
+            if not (
+                image_instance := session.query(BookImage)
+                .filter(BookImage.book_no == book_no)
+                .first()
+            ):  
+                return HttpResp(resp_code=400, resp_msg="일치하는 이미지가 없습니다.")
+            
+            # 서버, DB 저장된 이미지 삭제
+            os.remove('images/'+image_instance.image_url)
+            session.delete(image_instance)
+            session.commit()
+
+            return HttpResp(resp_code=201, resp_msg="이미지 삭제 성공")
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,

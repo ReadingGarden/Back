@@ -18,6 +18,7 @@ class Book(BookBase, UtilModel):
     book_author = Column(String(100), nullable=False)
     book_publisher = Column(String(100), nullable=False)
     book_tree = Column(String(30), nullable=False)
+    book_image_url = Column(Text, nullable=True)
     book_status = Column(Integer, nullable=False)
     book_page = Column(Integer, nullable=False)
 
@@ -31,3 +32,12 @@ class BookRead(BookBase, UtilModel):
     book_start_date = Column(DateTime(timezone=True), nullable=True)
     book_end_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class BookImage(BookBase, UtilModel):
+    __tablename__ = "BOOK_IMAGE"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    book_no = Column(Integer, nullable=False)
+    image_name = Column(Text, nullable=False)
+    image_url = Column(Text, nullable=False)
+    image_created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
