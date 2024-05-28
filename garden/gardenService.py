@@ -363,6 +363,64 @@ class GardenService:
             logger.error(e)
             raise e
         
+    
+    @session_wrapper
+    def delete_to_garden(self, session, request, garden_no: int, to_garden_no:int):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not(
+                garden_instance := session.query(Garden)
+                .filter(Garden.garden_no == garden_no)
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 가든 정보가 없습니다.")
+            
+            # 가든이 1개 이하면
+            if not (
+                len(session.query(GardenUser)
+                .filter(GardenUser.user_no == user_instance.user_no)
+                .all()) > 1
+            ):
+                return HttpResp(resp_code=403, resp_msg="가든 삭제 불가")
+            
+            garden_user_instance = session.query(GardenUser).filter(GardenUser.garden_no == garden_no, GardenUser.user_no == user_instance.user_no).first()
+
+            # 책 옮기기
+            book_instance = session.query(Book).filter(Book.garden_no == garden_no, Book.user_no == user_instance.user_no).all()
+            for book in book_instance:
+                book.garden_no = to_garden_no
+                session.add(book)
+                
+            session.delete(garden_instance)
+            session.delete(garden_user_instance)
+            session.commit()
+            
+            return HttpResp(
+                resp_code=200, resp_msg="가든 삭제(책 이동) 성공"
+            )
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
 
     @session_wrapper
     def delete_garden_member(self, session, request, garden_no: int):
