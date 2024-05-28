@@ -1,15 +1,17 @@
 import logging
+import os
 import jwt
 
 from sqlalchemy import asc, desc
 from auths.models import User
 from auths.tokenService import token_service
-from book.models import Book, BookRead
+from book.models import Book, BookImage, BookRead
 from cores.schema import DataResp, HttpResp
 from sqlalchemy.orm import aliased
 
 from cores.utils import GenericPayload, session_wrapper
 from garden.models import Garden, GardenUser
+from memo.models import Memo, MemoImage
 
 
 logger = logging.getLogger("django.server")
@@ -319,6 +321,30 @@ class GardenService:
                 return HttpResp(resp_code=403, resp_msg="가든 삭제 불가")
             
             garden_user_instance = session.query(GardenUser).filter(GardenUser.garden_no == garden_no, GardenUser.user_no == user_instance.user_no).first()
+
+            # 가든에 있는 책 삭제
+            book_instance = session.query(Book).filter(Book.garden_no == garden_no, Book.user_no == user_instance.user_no).all()
+            for book in book_instance:
+                # 책 이미지 삭제
+                book_image_instance = session.query(BookImage).filter(BookImage.book_no == book.book_no).first()
+                if book_image_instance:
+                    try:
+                        os.remove('images/'+book_image_instance.image_url)
+                        session.delete(book_image_instance)
+                    except FileNotFoundError:
+                        pass
+                session.delete(book)
+                # 메모 삭제
+                memo_instance = session.query(Memo).filter(Memo.book_no == book.book_no).all()
+                for memo in memo_instance:
+                    memo_image_instance = session.query(MemoImage).filter(MemoImage.memo_no == memo.id).first()
+                    if memo_image_instance:
+                        try:
+                            os.remove('images/'+memo_image_instance.image_url)
+                            session.delete(memo_image_instance)
+                        except FileNotFoundError:
+                            pass
+                    session.delete(memo)
 
             session.delete(garden_instance)
             session.delete(garden_user_instance)
