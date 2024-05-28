@@ -1,6 +1,5 @@
 import logging
 
-from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from django.utils import timezone
 
@@ -115,8 +114,6 @@ class AuthService:
     @session_wrapper
     def user_login(self, session, payload: GenericPayload) -> dict:
         try:
-            ph = PasswordHasher()
-            # user_email, user_password = payload['user_email'], payload['user_password']
             if payload['user_social_id']:
                 if not (
                     user_instance := session.query(User)

@@ -15,7 +15,7 @@ from cores.schema import DataResp, HttpResp
 
 from cores.utils import GenericPayload, session_wrapper
 from garden.models import Garden, GardenUser
-from memo.models import Memo
+from memo.models import Memo, MemoImage
 
 
 logger = logging.getLogger("django.server")
@@ -181,16 +181,28 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
             
-            if (
-                image_instance := session.query(BookImage)
-                .filter(BookImage.book_no == book_no)
-                .first()
-            ):
+            # 책 이미지 삭제
+            image_instance = session.query(BookImage).filter(BookImage.book_no == book_no).first()
+            if image_instance:
                 # 서버, DB 저장된 이미지 삭제
-                os.remove('images/'+image_instance.image_url)
-                session.delete(image_instance)
-                session.commit()
-            
+                try:
+                    os.remove('images/'+image_instance.image_url)
+                    session.delete(image_instance)
+                except FileNotFoundError:
+                    pass
+
+            # 메모 삭제 및 메모 이미지도 같이
+            memo_instance = session.query(Memo).filter(Memo.book_no == book_no).all()
+            for memo in memo_instance:
+                memo_image_instance = session.query(MemoImage).filter(MemoImage.memo_no == memo.id).first()
+                if memo_image_instance:
+                    try:
+                        os.remove('images/'+memo_image_instance.image_url)
+                        session.delete(memo_image_instance)
+                    except FileNotFoundError:
+                        pass
+                session.delete(memo)
+
             session.delete(book_instance)
             session.commit()
 
