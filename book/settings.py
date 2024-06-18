@@ -45,7 +45,9 @@ DEBUG = env('DEBUG')
 
 
 ALLOWED_HOSTS = [
-    ".ap-northeast-2.compute.amazonaws.com"
+    '127.0.0.1',
+    'localhost',
+    '.ap-northeast-2.compute.amazonaws.com'
 ]
 
 APPEND_SLASH = False

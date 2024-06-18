@@ -19,7 +19,7 @@ GenericPayload = TypeVar("GenericPayload")
 logger = logging.getLogger("django.server")
 
 
-engin = create_engine(settings.SQLALCHEMY_DATABASE_URI, echo=True)
+engin = create_engine(settings.SQLALCHEMY_DATABASE_URI, echo=True, pool_pre_ping=True)
 Session = sessionmaker(
     autocommit=False, autoflush=False, bind=engin, expire_on_commit=False
 )
