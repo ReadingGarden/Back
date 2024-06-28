@@ -401,7 +401,7 @@ class AuthService:
             result = {
                 "user_no": user_instance.user_no,
                 "user_nick": user_instance.user_nick,
-                "user_email": user_instance.user_nick,
+                "user_email": user_instance.user_email,
                 # "user_fcm": "string",
                 # "user_social_id": "string",
                 "user_social_type": user_instance.user_social_type,
