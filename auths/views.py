@@ -16,14 +16,14 @@ router = Router(tags=["auth"])
 class CreateUserSchema(Schema, BaseModel):
     user_email: str = Field("", alias="user_email", pattern=r"^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$")
     user_password: str = Field(..., alias="user_password")
-    user_fcm: str = Field("", alias="use_fcm")
+    user_fcm: str = Field("", alias="user_fcm")
     user_social_id: str = Field("", alias="user_social_id")
     user_social_type: str = Field("", alias="user_social_type")
 
 class LoginUserSchema(Schema, BaseModel):
    user_email: str = Field(..., alias="user_email")
    user_password: str = Field(..., alias="user_password")
-   user_fcm: str = Field(..., alias="use_fcm")
+   user_fcm: str = Field(..., alias="user_fcm")
    user_social_id: str = Field(..., alias="user_social_id")
    user_social_type: str = Field(..., alias="user_social_type")
 
