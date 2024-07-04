@@ -177,7 +177,7 @@ class AuthService:
             session.delete(refresh_token)
 
             # FCM 삭제
-            user_instance.user_fcm = None
+            user_instance.user_fcm = ''
 
             session.add(user_instance)
             session.commit()
