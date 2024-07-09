@@ -87,7 +87,7 @@ class BookService:
                 # 'link': response_json['item'][0]['link'],
                 'author': response_json['item'][0]['author'],
                 # 'pubdate': response_json['item'][0]['pubdate'],
-                # 'description': response_json['item'][0]['description'],
+                'description': response_json['item'][0]['description'],
                 'isbn13': response_json['item'][0]['isbn13'],
                 'cover': response_json['item'][0]['cover'],
                 'publisher': response_json['item'][0]['publisher'],
