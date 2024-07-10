@@ -91,7 +91,7 @@ class MemoService:
 
             memo_instance.book_no = payload['book_no']
             memo_instance.memo_content = payload['memo_content']
-            memo_instance.memo_quote = payload['memo_quote']
+            # memo_instance.memo_quote = payload['memo_quote']
             
             session.add(memo_instance)
             session.commit()
@@ -189,7 +189,7 @@ class MemoService:
                     'book_title': book.book_title,
                     'book_author': book.book_author,
                     'memo_content': memo.memo_content,
-                    'memo_quote': memo.memo_quote,
+                    # 'memo_quote': memo.memo_quote,
                     'memo_like': memo.memo_like,
                     'image_url': (
                         (image_instance.image_url if image_instance else '')
@@ -250,7 +250,7 @@ class MemoService:
                     'book_author': book.book_author,
                     'book_publisher': book.book_publisher,
                     'memo_content': memo.memo_content,
-                    'memo_quote': memo.memo_quote,
+                    # 'memo_quote': memo.memo_quote,
                     'image_url': image_url,
                     'memo_created_at': memo.memo_created_at
             }

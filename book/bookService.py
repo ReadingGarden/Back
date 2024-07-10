@@ -399,7 +399,7 @@ class BookService:
                 {
                     'id': memo.id,
                     'memo_content': memo.memo_content,
-                    'memo_quote': memo.memo_quote,
+                    # 'memo_quote': memo.memo_quote,
                     'memo_created_at': memo.memo_created_at
                 }
                 for memo in memo_instance
