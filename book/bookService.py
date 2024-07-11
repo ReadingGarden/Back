@@ -6,6 +6,8 @@ import secrets
 import jwt
 import requests
 
+from sqlalchemy import or_
+
 from datetime import datetime
 from auths.models import User
 from auths.tokenService import token_service
@@ -281,13 +283,23 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
-            # 전체 조회
-            book_query = (
+            # 가든 전체 조회
+            if (status == 3):
+                book_query = (
+                    session.query(Book)
+                    .filter(
+                        Book.user_no == user_instance.user_no,
+                        or_(Book.book_status == 0, Book.book_status == 1))
+                ) 
+            else:
+                book_query = (
                 session.query(Book)
                     .filter(Book.user_no == user_instance.user_no, Book.book_status == status)
-            )
+                )
+
             
-            # 필터 조회
+            
+            # 가든 필터 조회
             if garden_no is not None:
                 book_query = book_query.filter(Book.garden_no == garden_no)
 
