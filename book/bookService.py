@@ -291,17 +291,18 @@ class BookService:
                 book_query = book_query.filter(Book.garden_no == garden_no)
 
             # status 필터 조회
-            if (status == 3):
-                book_query = (
-                book_query
-                .filter(
-                    Book.user_no == user_instance.user_no,
-                    or_(Book.book_status == 0, Book.book_status == 1))
-                )
-            else:
-                book_query = (book_query
-                .filter(Book.user_no == user_instance.user_no, Book.book_status == status)
-                )
+            if status is not None:
+                if status == 3:
+                    book_query = (
+                    book_query
+                    .filter(
+                        Book.user_no == user_instance.user_no,
+                        or_(Book.book_status == 0, Book.book_status == 1))
+                    )
+                else:
+                    book_query = (book_query
+                    .filter(Book.user_no == user_instance.user_no, Book.book_status == status)
+                    )
 
         
             book_instance = book_query.all()
