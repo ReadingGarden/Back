@@ -30,8 +30,17 @@ environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-BOOK_IMAGE_DIR = str(BASE_DIR.parent) + '/book/images/book'
-MEMO_IMAGE_DIR = str(BASE_DIR.parent) + '/book/images/memo'
+
+# 현재 파일의 위치
+current_file = Path(__file__).resolve()
+# 현재 파일의 상위 디렉토리
+project_root = current_file.parent
+# 상위 디렉토리의 이름을 가져옵니다.
+project_name = project_root.name
+
+BOOK_IMAGE_DIR = str(BASE_DIR.parent) + '/'+ project_name +'/images/book'
+MEMO_IMAGE_DIR = str(BASE_DIR.parent) + '/'+ project_name +'/images/memo'
+# MEMO_IMAGE_DIR = str(BASE_DIR.parent) + '/book/images/memo'
 
 
 # Quick-start development settings - unsuitable for production
