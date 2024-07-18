@@ -62,8 +62,13 @@ class GardenService:
                 session.commit()
                 session.refresh(new_garden_user)
 
+                data = {
+                    **payload
+                }
+                data['garden_no'] = new_garden.garden_no
+
                 return DataResp(
-                    resp_code=201, resp_msg="가든 추가 성공", data=payload
+                    resp_code=201, resp_msg="가든 추가 성공", data=data
                 )
             
             else:
