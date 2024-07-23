@@ -18,7 +18,7 @@ class CreateBookShema(Schema, BaseModel):
     book_title: str = Field(..., alias="book_title")
     book_author: str = Field(..., alias="book_author")
     book_publisher: str = Field(..., alias="book_publisher")
-    book_tree: str = Field(..., alias="book_tree")
+    book_tree: str = Field(None, alias="book_tree")
     book_image_url: str = Field(None, alias="book_image_url")
     book_status: int = Field(..., alias="book_status")
     book_page: int = Field(...,alias="book_page")
