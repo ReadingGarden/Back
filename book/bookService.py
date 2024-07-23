@@ -135,7 +135,7 @@ class BookService:
                 session.query(Garden)
                 .filter(Garden.garden_no == payload['garden_no'], user_instance.user_no == GardenUser.user_no)
                 .first()
-            ):
+            ) and (payload['garden_no'] is not None):
                 return HttpResp(resp_code=400, resp_msg="일치하는 가든이 없습니다.")
                 
             

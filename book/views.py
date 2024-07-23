@@ -14,7 +14,7 @@ router = Router(tags=["book"])
 
 class CreateBookShema(Schema, BaseModel):
     book_isbn: str = Field(None, alias="book_isbn")
-    garden_no: int = Field(..., alias="garden_no")
+    garden_no: int = Field(None, alias="garden_no")
     book_title: str = Field(..., alias="book_title")
     book_author: str = Field(..., alias="book_author")
     book_publisher: str = Field(..., alias="book_publisher")
@@ -24,14 +24,13 @@ class CreateBookShema(Schema, BaseModel):
     book_page: int = Field(...,alias="book_page")
 
 class UpdateBookShema(Schema, BaseModel):
-    garden_no: int = Field(..., alias="garden_no", )
+    garden_no: int = Field(None, alias="garden_no", )
     # book_title: str = Field(..., alias="book_title")
     # book_author: str = Field(..., alias="book_author")
     # book_publisher: str = Field(..., alias="book_publisher")
     book_tree: str = Field(..., alias="book_tree")
     book_image_url: str = Field(None, alias="book_image_url")
     book_status: int = Field(..., alias="book_status")
-    #TODO: - 총 페이지 수정도 포함?
 
 class CreateReadShema(Schema, BaseModel):
     book_no: int = Field(..., alias="book_no")

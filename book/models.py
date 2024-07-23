@@ -12,7 +12,7 @@ class Book(BookBase, UtilModel):
 
     book_no = Column(Integer, primary_key=True)
     book_isbn = Column(String(30), nullable=True)
-    garden_no = Column(Integer, nullable=False)
+    garden_no = Column(Integer, nullable=True)
     user_no = Column(Integer, nullable=False)
     book_title = Column(String(100), nullable=False)
     book_author = Column(String(100), nullable=False)
