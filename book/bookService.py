@@ -6,7 +6,7 @@ import secrets
 import jwt
 import requests
 
-from sqlalchemy import or_
+from sqlalchemy import desc, or_
 
 from datetime import datetime
 from auths.models import User
@@ -307,27 +307,38 @@ class BookService:
         
             book_instance = book_query.all()
 
-            result = [
-                {
+            result = []
+            
+            for book in book_instance:
+                percent = 0
+                if (
+                        book_read_instance := 
+                        session.query(BookRead)
+                        .filter(BookRead.book_no == book.book_no)
+                        .order_by(desc(BookRead.created_at))
+                        .first()
+                    ):
+                        percent = (book_read_instance.book_current_page/book.book_page)*100
+
+                result.append({
                     'book_no': book.book_no,
                     'book_title': book.book_title,
                     'book_author': book.book_author,
                     'book_publisher': book.book_publisher,
                     'book_image_url': book.book_image_url,
-                    'book_image_url2': (
-                        (image_instance.image_url if image_instance else '')
-                            if (image_instance := session.query(BookImage)
-                                .filter(BookImage.book_no == book.book_no)
-                                .first())
-                            else None
-                    ),
+                    # 'book_image_url2': (
+                    #     (image_instance.image_url if image_instance else '')
+                    #         if (image_instance := session.query(BookImage)
+                    #             .filter(BookImage.book_no == book.book_no)
+                    #             .first())
+                    #         else None
+                    # ),
                     'book_tree': book.book_tree,
                     'book_status': book.book_status,
+                    'percent': percent,
                     'book_page': book.book_page,
                     'garden_no': book.garden_no,
-                }
-                for book in book_instance
-            ]
+                })
             
             return DataResp(resp_code=200, resp_msg="책 상태 조회 성공", data=result)
         except (
