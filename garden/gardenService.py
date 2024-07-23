@@ -221,6 +221,10 @@ class GardenService:
                 # garden 멤버 가져오기
                 garden_members = session.query(garden_user_alias).filter(garden_user_alias.garden_no == garden.garden_no).all()
 
+                # Book 가져오기
+                book_instance_count = len(session.query(Book).filter(Book.garden_no ==garden.garden_no).all())
+                
+
                 result.append(
                     {
                         'garden_no': garden.garden_no,
@@ -228,6 +232,7 @@ class GardenService:
                         'garden_info': garden.garden_info,
                         'garden_color': garden.garden_color,
                         'garden_members': len(garden_members),
+                        'book_count': book_instance_count,
                         'garden_created_at': garden.garden_created_at,
                     }
                 )
