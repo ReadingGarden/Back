@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 from ninja import File, Router, Schema
 from ninja.files import UploadedFile
@@ -24,9 +25,9 @@ class CreateBookShema(Schema, BaseModel):
 
 class UpdateBookShema(Schema, BaseModel):
     garden_no: int = Field(..., alias="garden_no", )
-    book_title: str = Field(..., alias="book_title")
-    book_author: str = Field(..., alias="book_author")
-    book_publisher: str = Field(..., alias="book_publisher")
+    # book_title: str = Field(..., alias="book_title")
+    # book_author: str = Field(..., alias="book_author")
+    # book_publisher: str = Field(..., alias="book_publisher")
     book_tree: str = Field(..., alias="book_tree")
     book_image_url: str = Field(None, alias="book_image_url")
     book_status: int = Field(..., alias="book_status")
@@ -34,6 +35,8 @@ class UpdateBookShema(Schema, BaseModel):
 
 class CreateReadShema(Schema, BaseModel):
     book_no: int = Field(..., alias="book_no")
+    book_start_date: datetime = Field(None, alias="book_start_date")
+    book_end_date: datetime = Field(None, alias="book_end_date")
     book_current_page: int = Field(..., alias="book_current_page")
 
 

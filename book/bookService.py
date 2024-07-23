@@ -380,18 +380,18 @@ class BookService:
             book, garden = book_garden_instance
 
             result = {
-                'garden_title': garden.garden_title,
+                'garden_no': garden.garden_no,
                 'book_title': book.book_title,
                 'book_author': book.book_author,
                 'book_publisher': book.book_publisher,
                 'book_image_url': book.book_image_url,
-                'book_image_url2': (
-                    (image_instance.image_url if image_instance else '')
-                        if (image_instance := session.query(BookImage)
-                            .filter(BookImage.book_no == book.book_no)
-                            .first())
-                        else None
-                ),
+                # 'book_image_url2': (
+                #     (image_instance.image_url if image_instance else '')
+                #         if (image_instance := session.query(BookImage)
+                #             .filter(BookImage.book_no == book.book_no)
+                #             .first())
+                #         else None
+                # ),
                 'book_tree': book.book_tree,
                 'book_status': book.book_status,
                 'book_page': book.book_page,
@@ -400,13 +400,19 @@ class BookService:
                 'user_no': book.user_no
             }
             
-            if (
-                book_read_query :=session.query(BookRead)
-                .filter(BookRead.book_no == book_no, BookRead.user_no == user_instance.user_no).first()
-            ):
+            # 쿼리에서 조건에 맞는 BookRead 인스턴스를 찾습니다.
+            book_read_query = (
+                session.query(BookRead)
+                .filter(BookRead.book_no == book_no, BookRead.user_no == user_instance.user_no)
+            )
+            # 결과가 있을 경우
+            if book_read_query.first():
+                # 가장 최근의 BookRead 인스턴스를 가져옵니다.
                 book_read_instance = book_read_query.order_by(BookRead.created_at.desc()).first()
+
                 result['percent'] = (book_read_instance.book_current_page/book.book_page)*100
                 result['book_current_page'] = book_read_instance.book_current_page
+
                 # 독서 기록 리스트                
                 book_read_instances = book_read_query.order_by(BookRead.created_at.desc()).all()
                 result['book_read_list'] = [
@@ -418,6 +424,7 @@ class BookService:
                     }
                     for book_read in book_read_instances
                 ]
+
             # 메모 리스트
             memo_instance = session.query(Memo).filter(Memo.book_no == book.book_no).all()
             result['memo_list'] = [
@@ -475,7 +482,7 @@ class BookService:
                 session.query(BookRead)
                 .filter(BookRead.book_no == payload['book_no'], BookRead.user_no == user_instance.user_no)
                 .first()
-            ):
+            ) and (payload['book_start_date'] is None):
                 new_read.book_start_date = datetime.now()
                 book_instance.book_status = 0
                 session.add(book_instance)
