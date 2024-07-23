@@ -149,7 +149,7 @@ class BookService:
             session.commit()
             session.refresh(new_book)
 
-            return HttpResp(resp_code=201, resp_msg="책 등록 성공")
+            return DataResp(resp_code=201, resp_msg="책 등록 성공", data={'book_no':new_book.book_no})
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,
