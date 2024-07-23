@@ -79,7 +79,7 @@ class AuthService:
             # 새로운 가든 객체 생성
             new_garden_dict = {
                 "garden_title" : f'{new_user.user_nick}의 가든',
-                "garden_info" : '독서가든에 오신걸 환영합니다☺️ 오늘은 어떤 책을 키울까요?',
+                "garden_info" : '독서가든에 오신걸 환영합니다☺️',
                 "garden_color" : 'red',
             }
             new_garden = Garden(

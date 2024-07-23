@@ -135,12 +135,13 @@ class GardenService:
                         'book_no': book.book_no,
                         'book_isbn': book.book_isbn,
                         'book_title': book.book_title,
-                        # 'book_author': book.book_author,
-                        # 'book_publisher': book.book_publisher,
+                        'book_author': book.book_author,
+                        'book_publisher': book.book_publisher,
+                        'book_image_url': book.book_image_url,
                         'book_status': book.book_status,
                         'percent': percent,
-                        'user_no': book.user_no
-                        # 'book_page': book.book_page
+                        'user_no': book.user_no,
+                        'book_page': book.book_page
                         })
 
             result['book_list'] = book_list
