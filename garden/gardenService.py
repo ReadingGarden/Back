@@ -215,6 +215,8 @@ class GardenService:
                 garden_user_alias, garden_user_alias.garden_no == Garden.garden_no
             )
             .filter(garden_user_alias.user_no == user_instance.user_no)
+            # True인 항목이 먼저 오도록 내림차순 정렬
+            .order_by(desc(garden_user_alias.garden_main))
             .all()
             )
 
@@ -223,7 +225,7 @@ class GardenService:
                 garden_members = session.query(garden_user_alias).filter(garden_user_alias.garden_no == garden.garden_no).all()
 
                 # Book 가져오기
-                book_instance_count = len(session.query(Book).filter(Book.garden_no ==garden.garden_no).all())
+                book_instance_count = len(session.query(Book).filter(Book.garden_no == garden.garden_no).all())
                 
 
                 result.append(
