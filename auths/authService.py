@@ -80,7 +80,7 @@ class AuthService:
             new_garden_dict = {
                 "garden_title" : f'{new_user.user_nick}의 가든',
                 "garden_info" : '독서가든에 오신걸 환영합니다☺️',
-                "garden_color" : 'red',
+                "garden_color" : 'green',
             }
             new_garden = Garden(
                 **new_garden_dict
