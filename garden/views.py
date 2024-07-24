@@ -66,14 +66,14 @@ def update_garden(request, form: GardenSchema, garden_no: int):
 def delete_garden(request, garden_no: int):
     return RETURN_FUNC(garden_service.delete_garden(request, garden_no))
 
-@router.delete(
+@router.put(
     "/to",
     auth=UserAuth(),
     response={200: HttpResp, 400: HttpResp, 401: HttpResp, 403: HttpResp, 500: HttpResp},
-    summary="가든 삭제 (책 이동)"
+    summary="가든 책 이동"
 )
-def delete_to_garden(request, garden_no: int, to_garden_no:int):
-    return RETURN_FUNC(garden_service.delete_to_garden(request, garden_no, to_garden_no))
+def move_garden(request, garden_no: int, to_garden_no:int):
+    return RETURN_FUNC(garden_service.move_garden(request, garden_no, to_garden_no))
 
 
 @router.delete(
