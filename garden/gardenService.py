@@ -54,6 +54,7 @@ class GardenService:
                     "garden_no" : new_garden.garden_no,
                     "user_no" : user_instance.user_no,
                     "garden_leader" : True,
+                    "garden_main": True,
                 }
                 new_garden_user = GardenUser(
                     **new_garden_user_dict
@@ -406,21 +407,11 @@ class GardenService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 도착지 가든 정보가 없습니다.")
             
-            # 가든이 1개 이하면
-            # if not (
-            #     len(session.query(GardenUser)
-            #     .filter(GardenUser.user_no == user_instance.user_no)
-            #     .all()) > 1
-            # ):
-            #     return HttpResp(resp_code=403, resp_msg="가든 삭제 불가")
-            
-            # garden_user_instance = session.query(GardenUser).filter(GardenUser.garden_no == garden_no, GardenUser.user_no == user_instance.user_no).first()
-
-            # TODO: - 책 30개 이하만 옭기기 가능
             # 책 옮기기
-            book_instance = session.query(Book).filter(Book.garden_no == garden_no, Book.user_no == user_instance.user_no).all() # 현재 가든의 ...
+            book_instance = session.query(Book).filter(Book.garden_no == garden_no, Book.user_no == user_instance.user_no).all() # 현재 
             book_instance2 = session.query(Book).filter(Book.garden_no == to_garden_no).all() # 도착지 가든의 책 인스턴스
 
+            # 도착지 가든 + 현재 책 합 30개 이하만 가능
             if len(book_instance)+len(book_instance2) > 30:
                 return HttpResp(resp_code=403, resp_msg="가든 옮기기 불가")
             
@@ -428,9 +419,6 @@ class GardenService:
                 book.garden_no = to_garden_no
                 session.add(book)
 
-                
-            # session.delete(garden_instance)
-            # session.delete(garden_user_instance)
             session.commit()
             
             return HttpResp(
@@ -539,6 +527,58 @@ class GardenService:
             
             return HttpResp(
                 resp_code=200, resp_msg="가든 멤버 변경 성공"
+            )
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
+        except Exception as e:
+            logger.error(e)
+            raise e
+        
+    @session_wrapper
+    def update_garden_main(self, session, request, garden_no: int):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not(
+                garden_instance := session.query(Garden)
+                .filter(Garden.garden_no == garden_no)
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 가든 정보가 없습니다.")            
+            
+            # 현재 가든 메인
+            garden_user_instance = session.query(GardenUser).filter(GardenUser.garden_main == True, GardenUser.user_no == user_instance.user_no).first()
+            
+            # 메인으로 변경할 가든
+            garden_user_instance2 = session.query(GardenUser).filter(GardenUser.garden_no == garden_no, GardenUser.user_no == user_instance.user_no).first()
+
+            garden_user_instance.garden_main = False
+            garden_user_instance2.garden_main = True
+
+            session.add(garden_user_instance)
+            session.add(garden_user_instance2)
+            session.commit()
+            session.refresh(garden_user_instance)
+            session.refresh(garden_user_instance2)
+            
+            return HttpResp(
+                resp_code=200, resp_msg="가든 메인 변경 성공"
             )
         except (
             jwt.ExpiredSignatureError,

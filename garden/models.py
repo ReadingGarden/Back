@@ -23,6 +23,7 @@ class GardenUser(GardenBase, UtilModel):
     garden_no = Column(Integer, nullable=False)
     user_no = Column(Integer, nullable=False)
     garden_leader = Column(Boolean, nullable=False)
+    garden_main = Column(Boolean, nullable=False)
     garden_sign_date = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
 
