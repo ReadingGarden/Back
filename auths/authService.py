@@ -445,8 +445,10 @@ class AuthService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             # db에 프로필 update
-            user_instance.user_nick = payload['user_nick']
-            user_instance.user_image = payload['user_image']
+            if (payload['user_nick']):
+                user_instance.user_nick = payload['user_nick']
+            else:
+                user_instance.user_image = payload['user_image']
 
             session.add(user_instance)
             session.commit()
