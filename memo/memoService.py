@@ -78,7 +78,7 @@ class MemoService:
                 .first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
-            
+                        
             if not (
                 memo_instance := session.query(Memo).filter(Memo.id == id).first()
             ):

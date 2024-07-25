@@ -35,7 +35,7 @@ def create_memo(request, form:MemoShema):
 )
 def update_memo(request, form:MemoShema, id:int):
     logger.info(f"Call update_memo API")
-    return RETURN_FUNC(memo_service.update_memo(request, id, form.dict()))
+    return RETURN_FUNC(memo_service.update_memo(request, form.dict(), id))
  
 @router.delete(
     "/",
