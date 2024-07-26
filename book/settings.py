@@ -38,8 +38,8 @@ project_root = current_file.parent
 # 상위 디렉토리의 이름을 가져옵니다.
 project_name = project_root.name
 
-BOOK_IMAGE_DIR = str(BASE_DIR.parent) + '/'+ project_name +'/images/book'
-MEMO_IMAGE_DIR = str(BASE_DIR.parent) + '/'+ project_name +'/images/memo'
+BOOK_IMAGE_DIR = str(BASE_DIR.parent) + '/Back/images/book'
+MEMO_IMAGE_DIR = str(BASE_DIR.parent) + '/Back/images/memo'
 # MEMO_IMAGE_DIR = str(BASE_DIR.parent) + '/book/images/memo'
 
 
