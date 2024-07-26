@@ -137,7 +137,7 @@ class MemoService:
                 .first()
             ):
                 # 서버, DB 저장된 이미지 삭제
-                os.remove('images/'+image_instance.image_url)
+                os.remove('images/'+image_instance.image_url)    
                 session.delete(image_instance)
                 session.commit()
             
@@ -188,6 +188,7 @@ class MemoService:
                     'book_no': memo.book_no,
                     'book_title': book.book_title,
                     'book_author': book.book_author,
+                    'book_image_url': book.book_image_url,
                     'memo_content': memo.memo_content,
                     # 'memo_quote': memo.memo_quote,
                     'memo_like': memo.memo_like,
