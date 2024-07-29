@@ -413,9 +413,14 @@ class MemoService:
             ):  
                 return HttpResp(resp_code=400, resp_msg="일치하는 이미지가 없습니다.")
             
-            # 서버, DB 저장된 이미지 삭제
-            os.remove('images/'+image_instance.image_url)
-            session.delete(image_instance)
+            if os.path.exists('images/'+image_instance.image_url):
+                try:
+                    # 서버, DB 저장된 이미지 삭제
+                    os.remove('images/'+image_instance.image_url)
+                except Exception as e:
+                    print(e)
+
+            session.delete(image_instance)                        
             session.commit()
 
             return HttpResp(resp_code=201, resp_msg="이미지 삭제 성공")
