@@ -59,10 +59,11 @@ class AuthService:
                     .first()
                 ):
                     return HttpResp(resp_code=409, resp_msg="이메일 중복")
-                
-            # 비밀번호 암호화
-            hashed_password = hash_password(payload['user_password'])
-            payload["user_password"] = hashed_password
+            
+            if payload['user_password']:
+                # 비밀번호 암호화
+                hashed_password = hash_password(payload['user_password'])
+                payload["user_password"] = hashed_password
                 
             # 새로운 유저 객체 생성
             new_user = User(
@@ -95,6 +96,7 @@ class AuthService:
                 "garden_no" : new_garden.garden_no,
                 "user_no" : new_user.user_no,
                 "garden_leader" : True,
+                "garden_main": True
             }
             new_garden_user = GardenUser(
                 **new_garden_user_dict
@@ -103,6 +105,8 @@ class AuthService:
             session.add(new_garden_user)
             session.commit()
             session.refresh(new_garden_user)
+
+            
 
             return DataResp(
                 resp_code=201, resp_msg="회원가입 성공", data={"user_no": new_user.user_no}
