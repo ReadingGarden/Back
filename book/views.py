@@ -28,9 +28,9 @@ class UpdateBookShema(Schema, BaseModel):
     # book_title: str = Field(..., alias="book_title")
     # book_author: str = Field(..., alias="book_author")
     # book_publisher: str = Field(..., alias="book_publisher")
-    book_tree: str = Field(..., alias="book_tree")
-    book_image_url: str = Field(None, alias="book_image_url")
-    book_status: int = Field(..., alias="book_status")
+    book_tree: str = Field(None, alias="book_tree")
+    # book_image_url: str = Field(None, alias="book_image_url")
+    book_status: int = Field(None, alias="book_status")
 
 class CreateReadShema(Schema, BaseModel):
     book_no: int = Field(..., alias="book_no")
