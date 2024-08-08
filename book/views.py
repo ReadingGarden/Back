@@ -109,7 +109,7 @@ def delete_book(request, book_no:int):
 @router.put(
     "/",
     auth=UserAuth(),
-    response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    response={200: HttpResp, 400: HttpResp, 401: HttpResp, 403: HttpResp, 500: HttpResp},
     summary="책 수정"
 )
 def update_book(request, form:UpdateBookShema, book_no: int):

@@ -242,23 +242,20 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
             
-            # TODO: - 가든 꽉차면 에러
             if payload['garden_no']:
                 # 책 옮기기
                 book_instance2 = session.query(Book).filter(Book.garden_no == payload['garden_no']).all() # 도착지 가든의 책 인스턴스
                 # 도착지 가든 + 현재 책 합 30개 이하만 가능
-                if len(book_instance)+len(book_instance2) > 30:
-                    book_instance.garden_no = payload['garden_no']
-                else:
+                if len(book_instance2) == 30:
                     return HttpResp(resp_code=403, resp_msg="가든 옮기기 불가")
 
             # book_instance.book_title = payload['book_title']
             # book_instance.book_author = payload['book_author']
             # book_instance.book_publisher = payload['book_publisher']
             # book_instance.book_image_url = payload['book_image_url']
-
-            for key, value in payload.dict().items():
-                setattr(book_instance, key, value)
+            for key, value in payload.items():
+                if value is not None:
+                    setattr(book_instance, key, value)
 
             # if payload['book_tree']:
             #     book_instance.book_tree = payload['book_tree']
