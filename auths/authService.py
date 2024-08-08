@@ -71,14 +71,13 @@ class AuthService:
                 user_nick = generate_random_nick()
             )
 
-            # 토큰 발급
-            token_pair = token_service.generate_pair_token(new_user)
-
             # 세션에 추가
             session.add(new_user)
             # DB에 저장
             session.commit()
             session.refresh(new_user)
+            # 토큰 발급
+            token_pair = token_service.generate_pair_token(new_user)
             
             # 새로운 가든 객체 생성
             new_garden_dict = {
