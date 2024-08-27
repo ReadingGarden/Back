@@ -463,6 +463,30 @@ class GardenService:
             
             garden_user_instance = session.query(GardenUser).filter(GardenUser.garden_no == garden_no, GardenUser.user_no == user_instance.user_no).first()
 
+            # 가든에 있는 책 삭제
+            book_instance = session.query(Book).filter(Book.garden_no == garden_no, Book.user_no == user_instance.user_no).all()
+            for book in book_instance:
+                # 책 이미지 삭제
+                book_image_instance = session.query(BookImage).filter(BookImage.book_no == book.book_no).first()
+                if book_image_instance:
+                    try:
+                        os.remove('images/'+book_image_instance.image_url)
+                        session.delete(book_image_instance)
+                    except FileNotFoundError:
+                        pass
+                session.delete(book)
+                # 메모 삭제
+                memo_instance = session.query(Memo).filter(Memo.book_no == book.book_no).all()
+                for memo in memo_instance:
+                    memo_image_instance = session.query(MemoImage).filter(MemoImage.memo_no == memo.id).first()
+                    if memo_image_instance:
+                        try:
+                            os.remove('images/'+memo_image_instance.image_url)
+                            session.delete(memo_image_instance)
+                        except FileNotFoundError:
+                            pass
+                    session.delete(memo)
+
             # 현재 대표 -> 위임
             if garden_user_instance.garden_leader:
                 garden_user_instance2 = session.query(GardenUser).filter(GardenUser.garden_no == garden_no, GardenUser.user_no != user_instance.user_no).first()
