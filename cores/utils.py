@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 from functools import wraps
 from typing import TypeVar
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm import sessionmaker, scoped_session, Query
 from email.message import EmailMessage
 
 from book import settings
@@ -106,6 +106,27 @@ def hash_password(password):
 # 비밀번호 검증
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
-    
 
+
+# 페이지네이션
+def pagination(query: Query, page: int, page_size: int):
+ total_items = query.count()
+ max_page = (total_items + page_size - 1) // page_size
+ offset = (page - 1) * page_size # 현재 페이지에 대한 오프셋 계산
+
+ paginated_items = (
+    query
+    .limit(page_size)  # 한 페이지당 항목 수 제한
+    .offset(offset)  # 현재 페이지 오프셋 적용
+    .all()  # 결과를 리스트로 반환
+ )
+
+ return {
+    "current_page": page,
+    "max_page": max_page,
+    "total": total_items,
+    "page_size": page_size,
+    "list": paginated_items
+ }
+    
 RETURN_FUNC = lambda r: (r.resp_code, r)
