@@ -53,9 +53,9 @@ def delete_memo(request, id:int):
     response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
     summary="메모 리스트 조회"
 )
-def get_memo(request):
+def get_memo(request, page: int = 1, page_size: int = 10):
     logger.info(f"Call get_memo API")
-    return RETURN_FUNC(memo_service.get_memo(request))
+    return RETURN_FUNC(memo_service.get_memo(request, page, page_size))
 
 @router.get(
     "/detail",

@@ -9,6 +9,7 @@ from auths.tokenService import token_service
 from book import settings
 from book.models import Book, BookRead
 from cores.schema import DataResp, HttpResp
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from cores.utils import GenericPayload, session_wrapper
 from garden.models import Garden, GardenUser
@@ -157,7 +158,7 @@ class MemoService:
         
 
     @session_wrapper
-    def get_memo(self, session, request):
+    def get_memo(self, session, request, page: int = 1, page_size : int = 10):
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -173,16 +174,30 @@ class MemoService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
+            total_items = (
+                session.query(Memo, Book)
+                .join(Book, Book.book_no == Memo.book_no)
+                .filter(Memo.user_no == user_instance.user_no)
+                .count()
+            )
+            
+            # Calculate max pages
+            max_page = (total_items + page_size - 1) // page_size
+            # Calculate offset based on the current page and page size
+            offset = (page - 1) * page_size
+
             # Memo, Book join
             memo_book_instance = (
                 session.query(Memo, Book)
                 .join(Book, Book.book_no == Memo.book_no)
                 .filter(Memo.user_no == user_instance.user_no)
                 .order_by(Memo.memo_like.desc(), Memo.memo_created_at.desc())
+                .limit(page_size)  # 한 페이지당 항목 수 제한
+                .offset(offset)  # 현재 페이지 오프셋 적용
                 .all()
-                )
-
-            result = [                
+            )
+            
+            memo_list = [                
                 {
                     'id': memo.id,
                     'book_no': memo.book_no,
@@ -203,6 +218,15 @@ class MemoService:
                 }
                 for memo, book in memo_book_instance
             ]
+
+            # Result with pagination details
+            result = {
+                "current_page": page,
+                "max_page": max_page,
+                "total": total_items,
+                "page_size": page_size,
+                "memos": memo_list
+            }
 
             return DataResp(resp_code=200, resp_msg="메모 리스트 조회 성공", data=result)
         except (
