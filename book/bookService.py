@@ -15,7 +15,7 @@ from book import settings
 from book.models import Book, BookImage, BookRead
 from cores.schema import DataResp, HttpResp
 
-from cores.utils import GenericPayload, session_wrapper
+from cores.utils import GenericPayload, pagination, session_wrapper
 from garden.models import Garden, GardenUser
 from memo.models import Memo, MemoImage
 
@@ -242,13 +242,25 @@ class BookService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
             
-            book_instance.garden_no = payload['garden_no']
-            book_instance.book_title = payload['book_title']
-            book_instance.book_author = payload['book_author']
-            book_instance.book_publisher = payload['book_publisher']
-            book_instance.book_tree = payload['book_tree']
-            book_instance.book_image_url = payload['book_image_url']
-            book_instance.book_status = payload['book_status']
+            if payload['garden_no']:
+                # 책 옮기기
+                book_instance2 = session.query(Book).filter(Book.garden_no == payload['garden_no']).all() # 도착지 가든의 책 인스턴스
+                # 도착지 가든 + 현재 책 합 30개 이하만 가능
+                if len(book_instance2) == 30:
+                    return HttpResp(resp_code=403, resp_msg="가든 옮기기 불가")
+
+            # book_instance.book_title = payload['book_title']
+            # book_instance.book_author = payload['book_author']
+            # book_instance.book_publisher = payload['book_publisher']
+            # book_instance.book_image_url = payload['book_image_url']
+            for key, value in payload.items():
+                if value is not None:
+                    setattr(book_instance, key, value)
+
+            # if payload['book_tree']:
+            #     book_instance.book_tree = payload['book_tree']
+            # if payload['book_status']:
+            #     book_instance.book_status = payload['book_status']
 
             session.add(book_instance)
             session.commit()
@@ -267,7 +279,7 @@ class BookService:
         
     
     @session_wrapper
-    def get_book_status(self, session, request, garden_no:int=None, status:int=None):
+    def get_book_status(self, session, request, garden_no:int=None, status:int=None, page:int=1, page_size:int=10):
         try:
             token = request.headers.get("Authorization")
             if token is not None:
@@ -304,12 +316,12 @@ class BookService:
                     .filter(Book.user_no == user_instance.user_no, Book.book_status == status)
                     )
 
-        
-            book_instance = book_query.all()
-
-            result = []
+            # 페이지네이션 적용 (예: 1페이지, 페이지당 10개 항목)
+            pagination_result = pagination(book_query, page=page, page_size=page_size)
             
-            for book in book_instance:
+            # 페이지네이션된 결과에서 책 리스트 추출
+            book_status_list = []            
+            for book in pagination_result['list']:
                 percent = 0
                 if (
                         book_read_instance := 
@@ -320,7 +332,7 @@ class BookService:
                     ):
                         percent = (book_read_instance.book_current_page/book.book_page)*100
 
-                result.append({
+                book_status_list.append({
                     'book_no': book.book_no,
                     'book_title': book.book_title,
                     'book_author': book.book_author,
@@ -339,6 +351,15 @@ class BookService:
                     'book_page': book.book_page,
                     'garden_no': book.garden_no,
                 })
+
+            # 최종 결과에 페이지네이션 정보 추가
+            result = {
+               "current_page": pagination_result["current_page"],
+               "max_page": pagination_result["max_page"],
+               "total_items": pagination_result["total"],
+               "page_size": pagination_result["page_size"],
+               "list": book_status_list
+            }
             
             return DataResp(resp_code=200, resp_msg="책 상태 조회 성공", data=result)
         except (

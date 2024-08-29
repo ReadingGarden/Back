@@ -76,6 +76,8 @@ class AuthService:
             # DB에 저장
             session.commit()
             session.refresh(new_user)
+            # 토큰 발급
+            token_pair = token_service.generate_pair_token(new_user)
             
             # 새로운 가든 객체 생성
             new_garden_dict = {
@@ -106,10 +108,11 @@ class AuthService:
             session.commit()
             session.refresh(new_garden_user)
 
-            
+            response = token_pair
+            response['user_nick'] = new_user.user_nick
 
             return DataResp(
-                resp_code=201, resp_msg="회원가입 성공", data={"user_no": new_user.user_no}
+                resp_code=201, resp_msg="회원가입 성공", data=response
             )
         except Exception as e:
             logger.error(e)
@@ -238,6 +241,14 @@ class AuthService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             refresh_token = session.query(RefreshToken).filter(RefreshToken.user_no == user_instance.user_no).first()
+            # 가든 유저 삭제
+            garden_user_instance = session.query(GardenUser).filter(GardenUser.user_no == user_instance.user_no).all()
+
+            for garden_user in garden_user_instance:
+                # 가입된 가든 전부 불러오기
+                garden_instance = session.query(Garden).filter(Garden.garden_no == garden_user.garden_no).all()
+                # session.delete(garden_user)
+            
             
             session.delete(user_instance)
             session.delete(refresh_token)
