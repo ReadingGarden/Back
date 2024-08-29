@@ -174,12 +174,13 @@ class MemoService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
-            total_items = (
+            memo_book_query = (
                 session.query(Memo, Book)
                 .join(Book, Book.book_no == Memo.book_no)
                 .filter(Memo.user_no == user_instance.user_no)
-                .count()
             )
+
+            total_items = memo_book_query.count()            
             
             # Calculate max pages
             max_page = (total_items + page_size - 1) // page_size
@@ -188,9 +189,7 @@ class MemoService:
 
             # Memo, Book join
             memo_book_instance = (
-                session.query(Memo, Book)
-                .join(Book, Book.book_no == Memo.book_no)
-                .filter(Memo.user_no == user_instance.user_no)
+                memo_book_query                
                 .order_by(Memo.memo_like.desc(), Memo.memo_created_at.desc())
                 .limit(page_size)  # 한 페이지당 항목 수 제한
                 .offset(offset)  # 현재 페이지 오프셋 적용
