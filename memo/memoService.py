@@ -214,7 +214,7 @@ class MemoService:
                 "max_page": pagination_result["max_page"],
                 "total": pagination_result["total"],
                 "page_size": pagination_result["page_size"],
-                "memos": memo_list
+                "list": memo_list
             }
 
             return DataResp(resp_code=200, resp_msg="메모 리스트 조회 성공", data=result)

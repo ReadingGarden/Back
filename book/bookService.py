@@ -358,7 +358,7 @@ class BookService:
                "max_page": pagination_result["max_page"],
                "total_items": pagination_result["total"],
                "page_size": pagination_result["page_size"],
-               "books": book_status_list
+               "list": book_status_list
             }
             
             return DataResp(resp_code=200, resp_msg="책 상태 조회 성공", data=result)
