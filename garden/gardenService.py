@@ -122,7 +122,7 @@ class GardenService:
 
             #TODO - 나무 타입
             for book in book_instance:
-                percent = 0
+                percent = 0.0
                 if (
                     book_read_instance := 
                     session.query(BookRead)
