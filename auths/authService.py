@@ -1,4 +1,5 @@
 import logging
+import os
 
 from argon2.exceptions import VerifyMismatchError
 from django.utils import timezone
@@ -8,15 +9,17 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 import jwt
+from sqlalchemy import asc
 from tzlocal import get_localzone
 
 from auths.models import RefreshToken, User
 from book import settings
-from book.models import Book
+from book.models import Book, BookImage
 from cores.schema import DataResp, HttpResp, ServiceError
 from cores.utils import GenericPayload, hash_password, send_email, session_wrapper, generate_random_string, generate_random_nick, reset_auth_number, verify_password
 from auths.tokenService import token_service
 from garden.models import Garden, GardenUser
+from memo.models import Memo, MemoImage
 
 
 logger = logging.getLogger("django.server")
@@ -240,16 +243,64 @@ class AuthService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
-            refresh_token = session.query(RefreshToken).filter(RefreshToken.user_no == user_instance.user_no).first()
-            # 가든 유저 삭제
+            # 리프레시 인스턴스
+            refresh_token = session.query(RefreshToken).filter(RefreshToken.
+            user_no == user_instance.user_no).first()
+
+            # 가입된 가든 유저 정보
             garden_user_instance = session.query(GardenUser).filter(GardenUser.user_no == user_instance.user_no).all()
 
             for garden_user in garden_user_instance:
-                # 가입된 가든 전부 불러오기
-                garden_instance = session.query(Garden).filter(Garden.garden_no == garden_user.garden_no).all()
-                # session.delete(garden_user)
+                # 리더인 경우 (개인 포함)
+                if garden_user.garden_leader:
+                    
+                    # 리더인 가든 모든 유저
+                    garden_user_count = len(session.query(GardenUser).filter(GardenUser.garden_no == garden_user.garden_no).all())
+                    
+                    # 공유 가든 -> 리더 위임
+                    if garden_user_count > 1:
+                        # 가입된 가든 별 차기 리더
+                        garden_second_leader_instance = session.query(GardenUser).filter(GardenUser.garden_no == garden_user.garden_no, GardenUser.user_no != user_instance.user_no).order_by(asc(GardenUser.garden_sign_date)).first()
+                        
+                        garden_second_leader_instance.garden_leader = True
+
+                        session.add(garden_second_leader_instance)
+                        session.commit()
+                        session.refresh(garden_second_leader_instance)
+
+                    # 개인 가든 -> 삭제
+                    else:
+                        session.delete(garden_user)
+                # 리더가 아닌 경우 탈퇴
+                else:
+                    session.delete(garden_user)
             
+            # 책 삭제
+            book_instance = session.query(Book).filter(Book.user_no == user_instance.user_no).all()
+            for book in book_instance:
+                # 책 이미지 삭제
+                book_image_instance = session.query(BookImage).filter(BookImage.book_no == book.book_no).first()
+                if book_image_instance:
+                    try:
+                        os.remove('images/'+book_image_instance.image_url)
+                        session.delete(book_image_instance)
+                    except FileNotFoundError:
+                        pass    
+                session.delete(book)
             
+            # 메모 삭제
+            memo_instance = session.query(Memo).filter(Memo.user_no == user_instance.user_no).all()
+            for memo in memo_instance:
+                # 메모 이미지 삭제
+                memo_image_instance = session.query(MemoImage).filter(MemoImage.memo_no == memo.id).first()
+                if memo_image_instance:
+                    try:
+                        os.remove('images/'+memo_image_instance.image_url)
+                        session.delete(memo_image_instance)
+                    except FileNotFoundError:
+                        pass
+                session.delete(memo)
+                                            
             session.delete(user_instance)
             session.delete(refresh_token)
             session.commit()
