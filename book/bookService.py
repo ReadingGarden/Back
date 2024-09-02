@@ -322,7 +322,7 @@ class BookService:
             # 페이지네이션된 결과에서 책 리스트 추출
             book_status_list = []            
             for book in pagination_result['list']:
-                percent = 0
+                percent = 0.0
                 if (
                         book_read_instance := 
                         session.query(BookRead)
@@ -417,7 +417,7 @@ class BookService:
                 'book_status': book.book_status,
                 'book_page': book.book_page,
                 'book_current_page': 0,
-                'percent': 0,
+                'percent': 0.0,
                 'user_no': book.user_no
             }
             
@@ -519,7 +519,7 @@ class BookService:
             session.add(new_read)
             session.commit()
             
-            percent = 0
+            percent = 0.0
 
             if  book_instance.book_page > 0:
                 percent = (new_read.book_current_page/book_instance.book_page)*100
