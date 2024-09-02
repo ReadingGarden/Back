@@ -247,16 +247,16 @@ class AuthService:
             refresh_token = session.query(RefreshToken).filter(RefreshToken.
             user_no == user_instance.user_no).first()
 
-            # 가입된 가든 유저 정보
+            # 가입된 가든 유저 인스턴스
             garden_user_instance = session.query(GardenUser).filter(GardenUser.user_no == user_instance.user_no).all()
 
             for garden_user in garden_user_instance:
                 # 리더인 경우 (개인 포함)
                 if garden_user.garden_leader:
                     
-                    # 리더인 가든 모든 유저
+                    # 리더인 가든의 멤버수
                     garden_user_count = len(session.query(GardenUser).filter(GardenUser.garden_no == garden_user.garden_no).all())
-                    
+
                     # 공유 가든 -> 리더 위임
                     if garden_user_count > 1:
                         # 가입된 가든 별 차기 리더
