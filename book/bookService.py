@@ -427,7 +427,7 @@ class BookService:
                 .filter(BookRead.book_no == book_no, BookRead.user_no == user_instance.user_no)
             )
             result['book_read_list'] = []
-            
+
             # 결과가 있을 경우
             if book_read_query.first():
                 # 가장 최근의 BookRead 인스턴스를 가져옵니다.
@@ -530,6 +530,48 @@ class BookService:
                 'book_current_page': payload['book_current_page'],
                 'percent': percent
             })
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')        
+        except Exception as e:
+            logger.error(e)
+            raise e
+
+    @session_wrapper
+    def update_read(self, session, request, payload: GenericPayload, id:int):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+
+            if not (
+                book_read_instance := session.query(BookRead).filter(BookRead.id == id).first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 책 기록이 없습니다.")
+            
+            if payload['book_start_date']:
+                book_read_instance.book_start_date = payload['book_start_date']
+            if payload['book_end_date']:
+                book_read_instance.book_end_date = payload['book_end_date']
+
+            session.add(book_read_instance)
+            session.commit()
+            session.refresh(book_read_instance)
+                
+            return HttpResp(resp_code=200, resp_msg="독서 기록 수정 성공")
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,
