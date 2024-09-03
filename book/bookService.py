@@ -426,6 +426,8 @@ class BookService:
                 session.query(BookRead)
                 .filter(BookRead.book_no == book_no, BookRead.user_no == user_instance.user_no)
             )
+            result['book_read_list'] = []
+            
             # 결과가 있을 경우
             if book_read_query.first():
                 # 가장 최근의 BookRead 인스턴스를 가져옵니다.
