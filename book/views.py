@@ -38,6 +38,11 @@ class CreateReadShema(Schema, BaseModel):
     book_end_date: datetime = Field(None, alias="book_end_date")
     book_current_page: int = Field(..., alias="book_current_page")
 
+class UpdateReadShema(Schema, BaseModel):
+    # book_no: int = Field(..., alias="book_no")
+    book_start_date: datetime = Field(None, alias="book_start_date")
+    book_end_date: datetime = Field(None, alias="book_end_date")
+
 
 @router.get(
     "/search",
@@ -114,7 +119,7 @@ def delete_book(request, book_no:int):
 )
 def update_book(request, form:UpdateBookShema, book_no: int):
     logger.info(f"Call update_book API")
-    return RETURN_FUNC(book_service.update_book(request, form.dict(),  book_no))
+    return RETURN_FUNC(book_service.update_book(request, form.dict(), book_no))
 
 
 @router.get(
@@ -155,6 +160,16 @@ def get_read(request, book_no:int):
 def create_read(request, form:CreateReadShema):
     logger.info(f"Call create_read API")
     return RETURN_FUNC(book_service.create_read(request, form.dict()))
+
+@router.put(
+    "/read",
+    auth=UserAuth(),
+    response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    summary="독서 기록 수정(날짜)"
+)
+def update_read(request, form:UpdateReadShema, id:int):
+    logger.info(f"Call update_read API")
+    return RETURN_FUNC(book_service.update_read(request, form.dict(), id))
 
 @router.delete(
     "/read",
