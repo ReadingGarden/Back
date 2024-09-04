@@ -20,6 +20,7 @@ from cores.utils import GenericPayload, hash_password, send_email, session_wrapp
 from auths.tokenService import token_service
 from garden.models import Garden, GardenUser
 from memo.models import Memo, MemoImage
+from push.models import Push
 
 
 logger = logging.getLogger("django.server")
@@ -76,11 +77,6 @@ class AuthService:
 
             # 세션에 추가
             session.add(new_user)
-            # DB에 저장
-            session.commit()
-            session.refresh(new_user)
-            # 토큰 발급
-            token_pair = token_service.generate_pair_token(new_user)
             
             # 새로운 가든 객체 생성
             new_garden_dict = {
@@ -93,7 +89,9 @@ class AuthService:
             )
 
             session.add(new_garden)
+            # DB에 저장 및 refresh
             session.commit()
+            session.refresh(new_user)
             session.refresh(new_garden)
 
             # 새로운 가든-유저 객체 생성
@@ -106,10 +104,25 @@ class AuthService:
             new_garden_user = GardenUser(
                 **new_garden_user_dict
             )
-            
+
             session.add(new_garden_user)
+
+            # 유저 푸시 알림 객체 생성
+            new_push_dict = {
+                "user_no": new_user.user_no,
+            }
+            new_push = Push(
+                **new_push_dict
+            )
+            
+            session.add(new_push)
+
             session.commit()
             session.refresh(new_garden_user)
+            session.refresh(new_push)
+
+            # 토큰 발급
+            token_pair = token_service.generate_pair_token(new_user)
 
             response = token_pair
             response['user_nick'] = new_user.user_nick
@@ -244,8 +257,11 @@ class AuthService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             # 리프레시 인스턴스
-            refresh_token = session.query(RefreshToken).filter(RefreshToken.
+            refresh_token_instance = session.query(RefreshToken).filter(RefreshToken.
             user_no == user_instance.user_no).first()
+
+            # 푸시 알림 인스턴스
+            push_instance = session.query(Push).filter(Push.user_no == user_instance.user_no).first()
 
             # 가입된 가든 유저 인스턴스
             garden_user_instance = session.query(GardenUser).filter(GardenUser.user_no == user_instance.user_no).all()
@@ -302,7 +318,8 @@ class AuthService:
                 session.delete(memo)
                                             
             session.delete(user_instance)
-            session.delete(refresh_token)
+            session.delete(refresh_token_instance)
+            session.delete(push_instance)
             session.commit()
         
             return DataResp(resp_code=200, resp_msg="회원 탈퇴 성공", data={})
