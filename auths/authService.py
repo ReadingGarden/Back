@@ -257,8 +257,11 @@ class AuthService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             # 리프레시 인스턴스
-            refresh_token = session.query(RefreshToken).filter(RefreshToken.
+            refresh_token_instance = session.query(RefreshToken).filter(RefreshToken.
             user_no == user_instance.user_no).first()
+
+            # 푸시 알림 인스턴스
+            push_instance = session.query(Push).filter(Push.user_no == user_instance.user_no).first()
 
             # 가입된 가든 유저 인스턴스
             garden_user_instance = session.query(GardenUser).filter(GardenUser.user_no == user_instance.user_no).all()
@@ -315,7 +318,8 @@ class AuthService:
                 session.delete(memo)
                                             
             session.delete(user_instance)
-            session.delete(refresh_token)
+            session.delete(refresh_token_instance)
+            session.delete(push_instance)
             session.commit()
         
             return DataResp(resp_code=200, resp_msg="회원 탈퇴 성공", data={})
