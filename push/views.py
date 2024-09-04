@@ -4,6 +4,7 @@ from django.shortcuts import render
 from ninja import Router, Schema
 from pydantic import BaseModel, Field
 
+from auths.permissions import UserAuth
 from push.pushService import push_service
 from cores.schema import DataResp, HttpResp
 from cores.utils import RETURN_FUNC
@@ -28,8 +29,9 @@ class UpdatePushShema(Schema, BaseModel):
 
 
 @router.put("/",
-             response={200: HttpResp, 400: HttpResp, 500: HttpResp}, 
-             summary="푸시 알림 수정")
+            auth=UserAuth(),
+            response={200: HttpResp, 400: HttpResp, 500: HttpResp}, 
+            summary="푸시 알림 수정")
 def update_push(request, form: UpdatePushShema):
     """
     푸시 알림 수정

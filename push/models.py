@@ -11,7 +11,7 @@ class Push(PushBase, UtilModel):
     __tablename__ = "PUSH"
 
     user_no = Column(Integer, primary_key=True)
-    push_app_ok = Column(Boolean, nullable=False)
+    push_app_ok = Column(Boolean, nullable=False, default=False)
     push_book_ok = Column(Boolean, nullable=False, default=False)
     push_time = Column(DateTime(timezone=True))
     

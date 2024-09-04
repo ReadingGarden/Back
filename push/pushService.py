@@ -5,6 +5,7 @@ from auths.models import User
 from auths.tokenService import token_service
 from cores.schema import HttpResp
 from cores.utils import GenericPayload, session_wrapper
+from push.models import Push
 
 
 logger = logging.getLogger("django.server")
@@ -43,8 +44,17 @@ class PushService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
+            push_instance = session.query(Push).filter(Push.user_no == user_instance.user_no).first()
+
+            push_instance.push_app_ok = payload['push_app_ok']
+            push_instance.push_book_ok = payload['push_book_ok']
+            push_instance.push_time = payload['push_time']
+
+            session.add(push_instance)
+            session.commit()
+            session.refresh(push_instance)
+            
             return HttpResp(resp_code=200, resp_msg="푸시 알림 수정 성공")
-            pass
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,
