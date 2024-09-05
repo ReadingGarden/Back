@@ -14,7 +14,7 @@ from tzlocal import get_localzone
 
 from auths.models import RefreshToken, User
 from book import settings
-from book.models import Book, BookImage
+from book.models import Book, BookImage, BookRead
 from cores.schema import DataResp, HttpResp, ServiceError
 from cores.utils import GenericPayload, hash_password, send_email, session_wrapper, generate_random_string, generate_random_nick, reset_auth_number, verify_password
 from auths.tokenService import token_service
@@ -294,6 +294,8 @@ class AuthService:
             # 책 삭제
             book_instance = session.query(Book).filter(Book.user_no == user_instance.user_no).all()
             for book in book_instance:
+                # 책 기록 삭제
+                session.query(BookRead).filter(BookRead.book_no == book.book_no).delete()
                 # 책 이미지 삭제
                 book_image_instance = session.query(BookImage).filter(BookImage.book_no == book.book_no).first()
                 if book_image_instance:

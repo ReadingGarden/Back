@@ -182,6 +182,9 @@ class BookService:
                 book_instance := session.query(Book).filter(Book.book_no == book_no, Book.user_no == user_instance.user_no).first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 책 정보가 없습니다.")
+
+            # 책 기록 삭제
+            book_read_instance = session.query(BookRead).filter(BookRead.book_no == book_no).delete()
             
             # 책 이미지 삭제
             image_instance = session.query(BookImage).filter(BookImage.book_no == book_no).first()
