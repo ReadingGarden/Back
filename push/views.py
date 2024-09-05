@@ -17,20 +17,20 @@ class UpdatePushShema(Schema, BaseModel):
     push_book_ok: bool = Field(None, alias="push_book_ok")
     push_time: datetime = Field(None, alias="push_time")
 
-# @router.post("/",
-#              response={201: HttpResp, 409: HttpResp, 500: HttpResp}, 
-#              summary="푸시 알림 등록")
-# def create_push(request, form: {}):
-#     """
-#     푸시 알림 등록
-#     """
-#     logger.info(f"Call create_push API")
-#     return RETURN_FUNC(push_service.create_push(request))
-
+@router.get("/",
+            auth=UserAuth(),
+             response={200: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp}, 
+             summary="푸시 알림 조회")
+def get_push(request):
+    """
+    푸시 알림 조회
+    """
+    logger.info(f"Call get_push API")
+    return RETURN_FUNC(push_service.get_push(request))
 
 @router.put("/",
             auth=UserAuth(),
-            response={200: HttpResp, 400: HttpResp, 500: HttpResp}, 
+            response={200: HttpResp, 400: HttpResp, 401: HttpResp, 500: HttpResp}, 
             summary="푸시 알림 수정")
 def update_push(request, form: UpdatePushShema):
     """
