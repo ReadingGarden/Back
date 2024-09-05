@@ -494,9 +494,6 @@ class AuthService:
                 "read_book_count": read_book_count,
                 "like_book_count": like_book_count,
             }
-
-            
-            
             return DataResp(resp_code=200, resp_msg="조회 성공", data=result)
         except (
             jwt.ExpiredSignatureError,
