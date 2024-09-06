@@ -447,6 +447,7 @@ class BookService:
                         'book_current_page': book_read.book_current_page,
                         'book_start_date': book_read.book_start_date,
                         'book_end_date': book_read.book_end_date,
+                        'created_ad': book_read.created_at
                     }
                     for book_read in book_read_instances
                 ]
