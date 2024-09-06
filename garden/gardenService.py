@@ -339,6 +339,8 @@ class GardenService:
             # 가든에 있는 책 삭제
             book_instance = session.query(Book).filter(Book.garden_no == garden_no, Book.user_no == user_instance.user_no).all()
             for book in book_instance:
+                # 책 기록 삭제
+                session.query(BookRead).filter(BookRead.book_no == book.book_no).delete()
                 # 책 이미지 삭제
                 book_image_instance = session.query(BookImage).filter(BookImage.book_no == book.book_no).first()
                 if book_image_instance:
