@@ -138,6 +138,7 @@ class GardenService:
                         'book_title': book.book_title,
                         'book_author': book.book_author,
                         'book_publisher': book.book_publisher,
+                        'book_info': book.book_info,
                         'book_image_url': book.book_image_url,
                         'book_status': book.book_status,
                         'percent': percent,

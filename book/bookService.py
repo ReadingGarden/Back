@@ -252,18 +252,9 @@ class BookService:
                 if len(book_instance2) == 30:
                     return HttpResp(resp_code=403, resp_msg="가든 옮기기 불가")
 
-            # book_instance.book_title = payload['book_title']
-            # book_instance.book_author = payload['book_author']
-            # book_instance.book_publisher = payload['book_publisher']
-            # book_instance.book_image_url = payload['book_image_url']
             for key, value in payload.items():
                 if value is not None:
                     setattr(book_instance, key, value)
-
-            # if payload['book_tree']:
-            #     book_instance.book_tree = payload['book_tree']
-            # if payload['book_status']:
-            #     book_instance.book_status = payload['book_status']
 
             session.add(book_instance)
             session.commit()
@@ -340,6 +331,7 @@ class BookService:
                     'book_title': book.book_title,
                     'book_author': book.book_author,
                     'book_publisher': book.book_publisher,
+                    'book_info': book.book_info,
                     'book_image_url': book.book_image_url,
                     # 'book_image_url2': (
                     #     (image_instance.image_url if image_instance else '')
@@ -408,6 +400,7 @@ class BookService:
                 'book_title': book.book_title,
                 'book_author': book.book_author,
                 'book_publisher': book.book_publisher,
+                'book_info': book.book_info,
                 'book_image_url': book.book_image_url,
                 # 'book_image_url2': (
                 #     (image_instance.image_url if image_instance else '')
@@ -436,8 +429,8 @@ class BookService:
                 # 가장 최근의 BookRead 인스턴스를 가져옵니다.
                 book_read_instance = book_read_query.order_by(BookRead.created_at.desc()).first()
 
-                result['percent'] = (book_read_instance.book_current_page/book.book_page)*100
                 result['book_current_page'] = book_read_instance.book_current_page
+                result['percent'] = (book_read_instance.book_current_page/book.book_page)*100
 
                 # 독서 기록 리스트                
                 book_read_instances = book_read_query.order_by(BookRead.created_at.desc()).all()
