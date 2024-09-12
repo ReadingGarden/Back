@@ -18,18 +18,15 @@ class CreateBookShema(Schema, BaseModel):
     book_title: str = Field(..., alias="book_title")
     book_author: str = Field(..., alias="book_author")
     book_publisher: str = Field(..., alias="book_publisher")
+    book_info: str = Field(..., alias="book_info")
     book_tree: str = Field(None, alias="book_tree")
     book_image_url: str = Field(None, alias="book_image_url")
     book_status: int = Field(..., alias="book_status")
     book_page: int = Field(...,alias="book_page")
 
 class UpdateBookShema(Schema, BaseModel):
-    garden_no: int = Field(None, alias="garden_no", )
-    # book_title: str = Field(..., alias="book_title")
-    # book_author: str = Field(..., alias="book_author")
-    # book_publisher: str = Field(..., alias="book_publisher")
+    garden_no: int = Field(None, alias="garden_no")
     book_tree: str = Field(None, alias="book_tree")
-    # book_image_url: str = Field(None, alias="book_image_url")
     book_status: int = Field(None, alias="book_status")
 
 class CreateReadShema(Schema, BaseModel):
@@ -39,7 +36,6 @@ class CreateReadShema(Schema, BaseModel):
     book_current_page: int = Field(..., alias="book_current_page")
 
 class UpdateReadShema(Schema, BaseModel):
-    # book_no: int = Field(..., alias="book_no")
     book_start_date: datetime = Field(None, alias="book_start_date")
     book_end_date: datetime = Field(None, alias="book_end_date")
 

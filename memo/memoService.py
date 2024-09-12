@@ -263,6 +263,7 @@ class MemoService:
                     'book_title': book.book_title,
                     'book_author': book.book_author,
                     'book_publisher': book.book_publisher,
+                    'book_info': book.book_info,
                     'memo_content': memo.memo_content,
                     # 'memo_quote': memo.memo_quote,
                     'image_url': image_url,
