@@ -618,6 +618,65 @@ class GardenService:
         except Exception as e:
             logger.error(e)
             raise e
+        
+    @session_wrapper
+    def create_garden_invite(self, session, request, garden_no: int):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            if not(
+                garden_instance := session.query(Garden)
+                .filter(Garden.garden_no == garden_no)
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 가든 정보가 없습니다.")
+            
+            # 가든 유저 개수 가져오기
+            garden_user_instance_count = len(session.query(GardenUser).filter(GardenUser.garden_no == garden_no).all())
+            
+            if garden_user_instance_count < 10 :
+                # 새로운 가든-유저 객체 생성
+                new_garden_user_dict = {
+                    "garden_no" : garden_no,
+                    "user_no" : user_instance.user_no,
+                    "garden_leader" : False,
+                    "garden_main": False,
+                }
+                new_garden_user = GardenUser(
+                        **new_garden_user_dict
+                )
+                session.add(new_garden_user)
+                session.commit()
+                session.refresh(new_garden_user)
+                
+                return HttpResp(
+                    resp_code=201, resp_msg="가든 초대 완료"
+                )
+            
+            else: 
+                return HttpResp(resp_code=403, resp_msg="가든 멤버 초과")
+        except (
+            jwt.ExpiredSignatureError,
+            jwt.InvalidTokenError,
+            jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
+        except Exception as e:
+            logger.error(e)
+            raise e
+
 
 
 

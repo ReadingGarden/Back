@@ -103,4 +103,13 @@ def update_garden_leader(request, garden_no: int, user_no:int):
 def update_garden_main(request, garden_no: int):
     return RETURN_FUNC(garden_service.update_garden_main(request, garden_no))
 
+@router.post(
+    "/invite",
+    auth=UserAuth(),
+    response={201: HttpResp, 400: HttpResp, 401: HttpResp, 403: HttpResp,  500: HttpResp},
+    summary="가든 초대 완료"
+)
+def create_garden_invite(request, garden_no: int):
+    return RETURN_FUNC(garden_service.create_garden_invite(request, garden_no))
+
 
