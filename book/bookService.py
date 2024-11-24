@@ -138,8 +138,6 @@ class BookService:
             ) and (payload['garden_no'] is not None):
                 return HttpResp(resp_code=400, resp_msg="일치하는 가든이 없습니다.")
                 
-            
-            #TODO - 나무 타입 선택
             new_book = Book(
                 **payload,
                 user_no=user_instance.user_no
