@@ -396,6 +396,7 @@ class BookService:
             result = {
                 'garden_no': garden.garden_no,
                 'book_title': book.book_title,
+                'book_info': book.book_info,
                 'book_author': book.book_author,
                 'book_publisher': book.book_publisher,
                 'book_info': book.book_info,
