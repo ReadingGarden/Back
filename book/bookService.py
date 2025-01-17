@@ -427,7 +427,7 @@ class BookService:
             # 쿼리에서 조건에 맞는 BookRead 인스턴스를 찾습니다.
             book_read_query = (
                 session.query(BookRead)
-                .filter(BookRead.book_no == book_no, BookRead.user_no == user_instance.user_no)
+                .filter(BookRead.book_no == book_no)
             )
             result['book_read_list'] = []
 
