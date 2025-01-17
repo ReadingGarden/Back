@@ -445,7 +445,7 @@ class BookService:
                 ]
 
             # 메모 리스트
-            memo_instance = session.query(Memo).filter(Memo.book_no == book.book_no).all()
+            memo_instance = session.query(Memo).filter(Memo.book_no == book.book_no).order_by(Memo.memo_like.desc(), Memo.memo_created_at.desc()).all()
             result['memo_list'] = [
                 {
                     'id': memo.id,
