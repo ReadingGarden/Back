@@ -27,7 +27,7 @@ class BookService:
     def get_book(self, session, request, query: str, start: int, maxResults: int):
         try:
             KEY = settings.ALADIN_TTBKEY
-            URL = f"http://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey={KEY}&Query={query}&QueryType=Keyword&MaxResults={maxResults}&start={start}&SearchTarget=BOOK&output=js&Version=20131101"
+            URL = f"http://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey={KEY}&Query={query}&QueryType=Keyword&MaxResults={maxResults}&Start={start}&Cover=Big&SearchTarget=BOOK&output=js&Version=20131101"
 
             book_response = requests.get(URL)
             # JSON 형식의 텍스트 데이터를 파이썬 딕셔너리로 변환합니다.
@@ -50,7 +50,7 @@ class BookService:
     def get_isbn_book(self, session, request, query: str):
         try:
             KEY = settings.ALADIN_TTBKEY
-            URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&itemIdType=ISBN&ItemId={query}&output=js&Version=20131101&"
+            URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&ItemIdType=ISBN&ItemId={query}&Cover=Big&output=js&Version=20131101&"
 
             book_response = requests.get(URL)
             # JSON 형식의 텍스트 데이터를 파이썬 딕셔너리로 변환합니다.
@@ -76,7 +76,7 @@ class BookService:
         """
         try:
             KEY = settings.ALADIN_TTBKEY
-            URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&itemIdType=ISBN13&ItemId={query}&output=js&Version=20131101"
+            URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&itemIdType=ISBN13&ItemId={query}&Cover=Big&output=js&Version=20131101"
             
             book_response = requests.get(URL)
             # JSON 형식의 텍스트 데이터를 파이썬 딕셔너리로 변환합니다.
