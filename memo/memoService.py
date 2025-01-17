@@ -343,6 +343,13 @@ class MemoService:
                 memo_instance := session.query(Memo).filter(Memo.id == id).first()
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 메모가 없습니다.")
+            
+
+            print('----------------------------------------')
+            print(f"MEMO_IMAGE_DIR: {settings.MEMO_IMAGE_DIR}")
+            print(f"Path exists: {os.path.exists(settings.MEMO_IMAGE_DIR)}")
+            print(f"Is directory: {os.path.isdir(settings.MEMO_IMAGE_DIR)}")
+
 
             # 해당 메모에 이미지 있으면
             if (
@@ -358,8 +365,8 @@ class MemoService:
             image_folder = settings.MEMO_IMAGE_DIR
 
             try:
-                os.mkdir(image_folder)
-            except FileExistsError:
+                os.makedirs(settings.MEMO_IMAGE_DIR, exist_ok=True)
+            except:
                 pass
 
             if file.size > (5 * 1024 * 1024):
