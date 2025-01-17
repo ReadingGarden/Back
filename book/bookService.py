@@ -137,17 +137,25 @@ class BookService:
                 .first()
             ) and (payload['garden_no'] is not None):
                 return HttpResp(resp_code=400, resp_msg="일치하는 가든이 없습니다.")
-                
-            new_book = Book(
-                **payload,
-                user_no=user_instance.user_no
-            )
+            
+            # 책 개수 가져오기
+            garden_book_instance_count = len(session.query(Book).filter(Book.garden_no == payload['garden_no']).all())
+            
+            if garden_book_instance_count < 30 :
+                # 새로운 책 객체 생성
 
-            session.add(new_book)
-            session.commit()
-            session.refresh(new_book)
+                new_book = Book(
+                    **payload,
+                    user_no=user_instance.user_no
+                )
 
-            return DataResp(resp_code=201, resp_msg="책 등록 성공", data={'book_no':new_book.book_no})
+                session.add(new_book)
+                session.commit()
+                session.refresh(new_book)
+
+                return DataResp(resp_code=201, resp_msg="책 등록 성공", data=   {'book_no':new_book.book_no})
+            else:
+                return HttpResp(resp_code=403, resp_msg="책 생성 개수 초과")
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,

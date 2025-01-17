@@ -86,7 +86,7 @@ def get_book_detail(request, query: str):
 @router.post(
     "/",
     auth=UserAuth(),
-    response={201: DataResp, 400: HttpResp, 401: HttpResp, 500: HttpResp},
+    response={201: DataResp, 400: HttpResp, 401: HttpResp, 403: HttpResp, 500: HttpResp},
     summary="책 등록"
 )
 def create_book(request, form:CreateBookShema):
