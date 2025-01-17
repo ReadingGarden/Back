@@ -644,6 +644,14 @@ class GardenService:
             ):
                 return HttpResp(resp_code=400, resp_msg="일치하는 가든 정보가 없습니다.")
             
+            # 가든 가입 여부 확인
+            if (
+                garden_user_instance := session.query(GardenUser)
+                .filter(GardenUser.garden_no == garden_no, GardenUser.user_no == user_instance.user_no)
+                .first()
+            ):
+                return HttpResp(resp_code=409, resp_msg="이미 가입된 가든")
+            
             # 가든 유저 개수 가져오기
             garden_user_instance_count = len(session.query(GardenUser).filter(GardenUser.garden_no == garden_no).all())
             
