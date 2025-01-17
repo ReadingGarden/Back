@@ -140,6 +140,7 @@ class GardenService:
                         'book_publisher': book.book_publisher,
                         'book_info': book.book_info,
                         'book_image_url': book.book_image_url,
+                        'book_tree': book.book_tree,
                         'book_status': book.book_status,
                         'percent': percent,
                         'user_no': book.user_no,
