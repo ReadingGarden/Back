@@ -27,7 +27,7 @@ class BookService:
     def get_book(self, session, request, query: str, start: int, maxResults: int):
         try:
             KEY = settings.ALADIN_TTBKEY
-            URL = f"http://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey={KEY}&Query={query}&QueryType=Keyword&MaxResults={maxResults}&start={start}&SearchTarget=BOOK&output=js&Version=20131101"
+            URL = f"http://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey={KEY}&Query={query}&QueryType=Keyword&MaxResults={maxResults}&Start={start}&Cover=Big&SearchTarget=BOOK&output=js&Version=20131101"
 
             book_response = requests.get(URL)
             # JSON 형식의 텍스트 데이터를 파이썬 딕셔너리로 변환합니다.
@@ -50,7 +50,7 @@ class BookService:
     def get_isbn_book(self, session, request, query: str):
         try:
             KEY = settings.ALADIN_TTBKEY
-            URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&itemIdType=ISBN&ItemId={query}&output=js&Version=20131101&"
+            URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&ItemIdType=ISBN&ItemId={query}&Cover=Big&output=js&Version=20131101&"
 
             book_response = requests.get(URL)
             # JSON 형식의 텍스트 데이터를 파이썬 딕셔너리로 변환합니다.
@@ -76,7 +76,7 @@ class BookService:
         """
         try:
             KEY = settings.ALADIN_TTBKEY
-            URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&itemIdType=ISBN13&ItemId={query}&output=js&Version=20131101"
+            URL = f"http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey={KEY}&itemIdType=ISBN13&ItemId={query}&Cover=Big&output=js&Version=20131101"
             
             book_response = requests.get(URL)
             # JSON 형식의 텍스트 데이터를 파이썬 딕셔너리로 변환합니다.
@@ -137,17 +137,25 @@ class BookService:
                 .first()
             ) and (payload['garden_no'] is not None):
                 return HttpResp(resp_code=400, resp_msg="일치하는 가든이 없습니다.")
-                
-            new_book = Book(
-                **payload,
-                user_no=user_instance.user_no
-            )
+            
+            # 책 개수 가져오기
+            garden_book_instance_count = len(session.query(Book).filter(Book.garden_no == payload['garden_no']).all())
+            
+            if garden_book_instance_count < 30 :
+                # 새로운 책 객체 생성
 
-            session.add(new_book)
-            session.commit()
-            session.refresh(new_book)
+                new_book = Book(
+                    **payload,
+                    user_no=user_instance.user_no
+                )
 
-            return DataResp(resp_code=201, resp_msg="책 등록 성공", data={'book_no':new_book.book_no})
+                session.add(new_book)
+                session.commit()
+                session.refresh(new_book)
+
+                return DataResp(resp_code=201, resp_msg="책 등록 성공", data=   {'book_no':new_book.book_no})
+            else:
+                return HttpResp(resp_code=403, resp_msg="책 생성 개수 초과")
         except (
             jwt.ExpiredSignatureError,
             jwt.InvalidTokenError,
@@ -419,7 +427,7 @@ class BookService:
             # 쿼리에서 조건에 맞는 BookRead 인스턴스를 찾습니다.
             book_read_query = (
                 session.query(BookRead)
-                .filter(BookRead.book_no == book_no, BookRead.user_no == user_instance.user_no)
+                .filter(BookRead.book_no == book_no)
             )
             result['book_read_list'] = []
 
@@ -445,7 +453,7 @@ class BookService:
                 ]
 
             # 메모 리스트
-            memo_instance = session.query(Memo).filter(Memo.book_no == book.book_no).all()
+            memo_instance = session.query(Memo).filter(Memo.book_no == book.book_no).order_by(Memo.memo_like.desc(), Memo.memo_created_at.desc()).all()
             result['memo_list'] = [
                 {
                     'id': memo.id,
