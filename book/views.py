@@ -82,6 +82,18 @@ def get_book_detail(request, query: str):
     logger.info(f"Call get_book_detail API")
     return RETURN_FUNC(book_service.get_book_detail(request, query))
 
+@router.get(
+        "/",
+        auth=UserAuth(),
+        response={200: HttpResp, 400: HttpResp, 401: HttpResp, 403: HttpResp, 500: HttpResp},
+        summary="책 등록 중복 확인"
+)
+def get_book_duplication(request, isbn: str):
+    """
+    * isbn: ISBN13 입력 (9788937462788)
+    """
+    logger.info(f"Call get_book_duplication API")
+    return RETURN_FUNC(book_service.get_book_duplication(request, isbn))
 
 @router.post(
     "/",
