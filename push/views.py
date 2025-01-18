@@ -38,4 +38,14 @@ def update_push(request, form: UpdatePushShema):
     """
     logger.info(f"Call create_push API")
     return RETURN_FUNC(push_service.update_push(request, form.dict()))
+
+@router.post("/book",
+            response={200: DataResp, 400: HttpResp, 500: HttpResp}, 
+            summary="푸시 알림 전송 (독서 알림)")
+def send_book_push(request):
+    """
+    FCM 멀티캐스트 푸시 알림 보내기 (독서 알림)
+    """
+    logger.info(f"Call send_push_notification API")
+    return RETURN_FUNC(push_service.send_book_push())
     

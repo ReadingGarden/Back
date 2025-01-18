@@ -1,8 +1,16 @@
+import json
 import logging
 import jwt
+import firebase_admin
+
+from firebase_admin import messaging
+from google.oauth2 import service_account
+from google.auth.transport.requests import Request
+import requests
 
 from auths.models import User
 from auths.tokenService import token_service
+from book import settings
 from cores.schema import DataResp, HttpResp
 from cores.utils import GenericPayload, session_wrapper
 from push.models import Push
@@ -83,6 +91,91 @@ class PushService:
         except Exception as e:
             logger.error(e)
             raise e
+        
+    # Firebase 서비스 계정을 사용하여 OAuth2 액세스 토큰을 생성
+    def get_access_token(self):
+        try:
+            credentials = service_account.Credentials.from_service_account_file(
+                settings.SERVICE_ACCOUNT_FILE, scopes=settings.SCOPES
+            )
+            # 인증 토큰을 갱신
+            credentials.refresh(Request())
+            access_token = credentials.token
+            if not access_token:
+                raise Exception("Failed to get access token")
+            return access_token
+        except Exception as e:
+            logger.error(e)
+        raise e
 
+    # FCM 메시지를 단일 토큰으로 전송
+    def send_fcm(self, token, title, body):
+        url = f"https://fcm.googleapis.com/v1/projects/{settings.FIREBASE_PROJECT_ID}/messages:send"
+        headers = {
+            "Authorization": f"Bearer {self.get_access_token()}",
+            "Content-Type": "application/json",
+        }
+        # 메시지 요청 데이터
+        message = {
+            "message": {
+                "token": token,
+                "notification": {
+                    "title": title,
+                    "body": body,
+                },
+                # "data": data or {},
+            }
+        }
+        # HTTP 요청 전송
+        response = requests.post(url, headers=headers, data=json.dumps(message))
+        return response.json() if response.status_code == 200 else response.text
 
+    # 여러 토큰에 FCM 메시지를 전송
+    def send_multicast_fcm(self, tokens, title, body):
+        results = []
+        for token in tokens:
+            if token:  # 유효한 토큰만 전송
+                result = self.send_fcm(token, title, body)
+                results.append(result)
+        return results
+    
+
+    @session_wrapper
+    def send_book_push(self, session):
+        try:
+            # User, Push join
+            user_push_instance = (
+                session.query(User, Push)
+                .join(Push, Push.user_no == User.user_no)
+                .filter(Push.push_book_ok == True).
+                all()
+            )
+
+            user_push_list = []
+            tokens = []
+            
+            for user, push in user_push_instance:
+                user_push_list.append({
+                    'user_no': push.user_no,
+                    'push_time': push.push_time,
+                    'user_fcm': user.user_fcm
+                })
+                tokens.append(user.user_fcm)
+
+            # 빈 값 제거 및 유효한 토큰 필터링
+            tokens = [token for token in tokens if token and isinstance(token, str) and token.strip()]
+
+            print(tokens)
+
+            # 멀티캐스트 FCM 메시지 전송
+            title = '지금은 물 주는 시간🪴'
+            body =  '책 어디까지 읽으셨나요? 독서가든에서 기록해보세요!'
+            results = self.send_multicast_fcm(tokens, title, body)
+
+            return DataResp(resp_code=200, resp_msg="푸시 알림 전송 성공" , data=results)     
+        except Exception as e:
+            logger.error(e)
+            raise e
+
+        
 push_service = PushService()
