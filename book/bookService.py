@@ -111,6 +111,43 @@ class BookService:
         except Exception as e:
             logger.error(e)
             raise e
+    
+    
+    @session_wrapper
+    def get_book_duplication(self, session, request, isbn: str):
+        try:
+            token = request.headers.get("Authorization")
+            if token is not None:
+                token = token.split(" ")[1]
+            else:
+                return HttpResp(resp_code=500, resp_msg="유효하지 않은 토큰 값입니다.")
+            
+            token_payload = token_service.verify_access_token(token)
+            if not(
+                user_instance := session.query(User)
+                .filter(User.user_no == token_payload['user_no'])
+                .first()
+            ):
+                return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
+            
+            # 책 중복 확인
+            if (
+                book_instance := session.query(Book)
+                .filter(Book.book_isbn == isbn, Book.user_no == user_instance.user_no)
+                .first()
+            ): 
+                return HttpResp(resp_code=403, resp_msg="책 중복")
+            
+            return HttpResp(resp_code=200, resp_msg="책 등록 가능")
+        except (
+        jwt.ExpiredSignatureError,
+        jwt.InvalidTokenError,
+        jwt.DecodeError
+        ) as e:
+            return HttpResp(resp_code=401, resp_msg=f'{e}')    
+        except Exception as e:
+            logger.error(e)
+            raise e
 
 
     @session_wrapper
