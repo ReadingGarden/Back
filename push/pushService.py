@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import logging
 import jwt
@@ -151,28 +152,29 @@ class PushService:
                 all()
             )
 
-            user_push_list = []
             tokens = []
-            
+
             for user, push in user_push_instance:
-                user_push_list.append({
-                    'user_no': push.user_no,
-                    'push_time': push.push_time,
-                    'user_fcm': user.user_fcm
-                })
-                tokens.append(user.user_fcm)
+                # 현재 시간을 "HH:MM" 형식으로 가져오기
+                current_time = datetime.now().strftime("%H:%M")
+                # push.push_time에서 시간만 추출
+                if push.push_time is not None:
+                    push_time_str = push.push_time.strftime("%H:%M")
+                    if push_time_str == current_time:
+                        tokens.append(user.user_fcm)
 
             # 빈 값 제거 및 유효한 토큰 필터링
             tokens = [token for token in tokens if token and isinstance(token, str) and token.strip()]
 
-            print(tokens)
+            results = []
 
             # 멀티캐스트 FCM 메시지 전송
-            title = '지금은 물 주는 시간🪴'
-            body =  '책 어디까지 읽으셨나요? 독서가든에서 기록해보세요!'
-            results = self.send_multicast_fcm(tokens, title, body)
+            if tokens:
+                title = '지금은 물 주는 시간🪴'
+                body =  '책 어디까지 읽으셨나요? 독서가든에서 기록해보세요!'
+                results = self.send_multicast_fcm(tokens, title, body)
 
-            return DataResp(resp_code=200, resp_msg="푸시 알림 전송 성공" , data=results)     
+            return DataResp(resp_code=200, resp_msg="푸시 알림 전송 성공" , data=results)
         except Exception as e:
             logger.error(e)
             raise e
