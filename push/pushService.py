@@ -14,6 +14,7 @@ from auths.tokenService import token_service
 from book import settings
 from cores.schema import DataResp, HttpResp
 from cores.utils import GenericPayload, session_wrapper
+from garden.models import Garden
 from push.models import Push
 
 
@@ -140,6 +141,47 @@ class PushService:
                 results.append(result)
         return results
     
+    
+    @session_wrapper
+    def send_new_member_push(self, session, user_no, garden_no):
+        try:
+            # User, Push join
+            user_push_instance = (
+                session.query(User, Push)
+                .join(Push, Push.user_no == User.user_no)
+                .filter(User.user_no == user_no, Push.push_app_ok == True).
+                all()
+            )
+
+            tokens = []
+
+            for user, push in user_push_instance:
+                tokens.append(user.user_fcm)
+                        
+
+            # 빈 값 제거 및 유효한 토큰 필터링
+            tokens = [token for token in tokens if token and isinstance(token, str) and token.strip()]
+
+            results = []
+
+            # 해당 가든 가져오기
+            garden_instance = (
+                session.query(Garden)
+                .filter(Garden.garden_no == garden_no)
+                .first()
+            )
+
+            # 멀티캐스트 FCM 메시지 전송
+            if tokens:
+                title = 'NEW 가드너 등장🧑‍🌾'
+                body =  f'{garden_instance.garden_title}에 새로운 멤버가 들어왔어요. 함께 책을 읽어 가든을 채워주세요'
+                results = self.send_multicast_fcm(tokens, title, body)
+
+                return DataResp(resp_code=200, resp_msg="새 멤버 알림 푸시 전송 성공" , data=results)
+        except Exception as e:
+            logger.error(e)
+            raise e
+    
 
     @session_wrapper
     def send_book_push(self, session):
@@ -174,7 +216,7 @@ class PushService:
                 body =  '책 어디까지 읽으셨나요? 독서가든에서 기록해보세요!'
                 results = self.send_multicast_fcm(tokens, title, body)
 
-            return DataResp(resp_code=200, resp_msg="푸시 알림 전송 성공" , data=results)
+            return DataResp(resp_code=200, resp_msg="독서 알림 푸시 전송 성공" , data=results)
         except Exception as e:
             logger.error(e)
             raise e

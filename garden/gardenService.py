@@ -12,6 +12,7 @@ from sqlalchemy.orm import aliased
 from cores.utils import GenericPayload, session_wrapper
 from garden.models import Garden, GardenUser
 from memo.models import Memo, MemoImage
+from push.pushService import push_service
 
 
 logger = logging.getLogger("django.server")
@@ -668,6 +669,15 @@ class GardenService:
                 session.add(new_garden_user)
                 session.commit()
                 session.refresh(new_garden_user)
+
+                # 가든에 있는 유저들
+                if (
+                garden_user_instance := session.query(GardenUser)
+                .filter(GardenUser.garden_no == garden_no, GardenUser.user_no != user_instance.user_no)
+                .all()
+                ):
+                    for garden_user in garden_user_instance:
+                        push_service.send_new_member_push(garden_user.user_no, garden_no)
                 
                 return HttpResp(
                     resp_code=201, resp_msg="가든 초대 완료"
