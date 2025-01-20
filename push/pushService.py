@@ -220,6 +220,38 @@ class PushService:
         except Exception as e:
             logger.error(e)
             raise e
+        
+    @session_wrapper
+    def send_notice_push(self, session, content: str):
+        try:
+            # User, Push join
+            user_push_instance = (
+                session.query(User, Push)
+                .join(Push, Push.user_no == User.user_no)
+                .filter(Push.push_app_ok == True).
+                all()
+            )
+
+            tokens = []
+
+            for user, push in user_push_instance:
+                        tokens.append(user.user_fcm)
+
+            # 빈 값 제거 및 유효한 토큰 필터링
+            tokens = [token for token in tokens if token and isinstance(token, str) and token.strip()]
+
+            results = []
+
+            # 멀티캐스트 FCM 메시지 전송
+            if tokens:
+                title = '독서가든'
+                body =  content
+                results = self.send_multicast_fcm(tokens, title, body)
+
+            return DataResp(resp_code=200, resp_msg="공지사항 푸시 전송 성공" , data=results)
+        except Exception as e:
+            logger.error(e)
+            raise e
 
         
 push_service = PushService()
