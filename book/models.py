@@ -14,7 +14,7 @@ class Book(BookBase, UtilModel):
     book_isbn = Column(String(30), nullable=True)
     garden_no = Column(Integer, nullable=True)
     user_no = Column(Integer, nullable=False)
-    book_title = Column(String(100), nullable=False)
+    book_title = Column(String(300), nullable=False)
     book_info = Column(Text, nullable=False, default='')
     book_author = Column(String(100), nullable=False)
     book_publisher = Column(String(100), nullable=False)
