@@ -111,7 +111,7 @@ class PushService:
         raise e
 
     # FCM 메시지를 단일 토큰으로 전송
-    def send_fcm(self, token, title, body):
+    def send_fcm(self, token, title, body, data):
         url = f"https://fcm.googleapis.com/v1/projects/{settings.FIREBASE_PROJECT_ID}/messages:send"
         headers = {
             "Authorization": f"Bearer {self.get_access_token()}",
@@ -125,19 +125,21 @@ class PushService:
                     "title": title,
                     "body": body,
                 },
-                # "data": data or {},
+                "data": data,
             }
         }
+
+
         # HTTP 요청 전송
         response = requests.post(url, headers=headers, data=json.dumps(message))
         return response.json() if response.status_code == 200 else response.text
 
     # 여러 토큰에 FCM 메시지를 전송
-    def send_multicast_fcm(self, tokens, title, body):
+    def send_multicast_fcm(self, tokens, title, body, data):
         results = []
         for token in tokens:
             if token:  # 유효한 토큰만 전송
-                result = self.send_fcm(token, title, body)
+                result = self.send_fcm(token, title, body, data)
                 results.append(result)
         return results
     
@@ -175,7 +177,8 @@ class PushService:
             if tokens:
                 title = 'NEW 가드너 등장🧑‍🌾'
                 body =  f'{garden_instance.garden_title}에 새로운 멤버가 들어왔어요. 함께 책을 읽어 가든을 채워주세요'
-                results = self.send_multicast_fcm(tokens, title, body)
+                data = {"garden_no": str(garden_no)}
+                results = self.send_multicast_fcm(tokens, title, body, data)
 
                 return DataResp(resp_code=200, resp_msg="새 멤버 알림 푸시 전송 성공" , data=results)
         except Exception as e:
@@ -214,7 +217,7 @@ class PushService:
             if tokens:
                 title = '지금은 물 주는 시간🪴'
                 body =  '책 어디까지 읽으셨나요? 독서가든에서 기록해보세요!'
-                results = self.send_multicast_fcm(tokens, title, body)
+                results = self.send_multicast_fcm(tokens, title, body, {})
 
             return DataResp(resp_code=200, resp_msg="독서 알림 푸시 전송 성공" , data=results)
         except Exception as e:
@@ -246,7 +249,7 @@ class PushService:
             if tokens:
                 title = '독서가든'
                 body =  content
-                results = self.send_multicast_fcm(tokens, title, body)
+                results = self.send_multicast_fcm(tokens, title, body, {})
 
             return DataResp(resp_code=200, resp_msg="공지사항 푸시 전송 성공" , data=results)
         except Exception as e:
