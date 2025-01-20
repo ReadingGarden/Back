@@ -120,7 +120,6 @@ class GardenService:
             
             book_list = []
 
-            #TODO - 나무 타입
             for book in book_instance:
                 percent = 0.0
                 if (
