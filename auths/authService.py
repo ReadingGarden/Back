@@ -110,6 +110,7 @@ class AuthService:
             # 유저 푸시 알림 객체 생성
             new_push_dict = {
                 "user_no": new_user.user_no,
+                "push_app_ok": True
             }
             new_push = Push(
                 **new_push_dict
@@ -348,7 +349,7 @@ class AuthService:
                 return HttpResp(resp_code=400, resp_msg="등록되지 않은 이메일 주소입니다.")
             try:
                 auth_number = generate_random_string(5)
-                send_email(email=payload['user_email'], title='test', content=auth_number)
+                send_email(email=payload['user_email'], title='[독서가든] 인증번호 안내드립니다', content=auth_number)
             except:
                 return HttpResp(resp_code=500, resp_msg="메일 전송 실패")
             
