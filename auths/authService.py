@@ -110,6 +110,7 @@ class AuthService:
             # 유저 푸시 알림 객체 생성
             new_push_dict = {
                 "user_no": new_user.user_no,
+                "push_app_ok": True
             }
             new_push = Push(
                 **new_push_dict
