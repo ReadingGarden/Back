@@ -125,10 +125,9 @@ class PushService:
                     "title": title,
                     "body": body,
                 },
-                "data": data,
+                "data": data,                
             }
         }
-
 
         # HTTP 요청 전송
         response = requests.post(url, headers=headers, data=json.dumps(message))
@@ -215,7 +214,7 @@ class PushService:
 
             # 멀티캐스트 FCM 메시지 전송
             if tokens:
-                title = '지금은 물 주는 시간🪴'
+                title = '💧물 주는 시간이에요!'
                 body =  '책 어디까지 읽으셨나요? 독서가든에서 기록해보세요!'
                 results = self.send_multicast_fcm(tokens, title, body, {})
 
