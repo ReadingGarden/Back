@@ -60,7 +60,10 @@ SERVICE_ACCOUNT_FILE = env('SERVICE_ACCOUNT_FILE')
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    '.ap-northeast-2.compute.amazonaws.com'
+    '.ap-northeast-2.compute.amazonaws.com',
+    '43.203.248.188',
+    '192.168.0.16',
+    '172.30.1.41'
 ]
 
 APPEND_SLASH = False
