@@ -175,15 +175,14 @@ class BookService:
             ) and (payload['garden_no'] is not None):
                 return HttpResp(resp_code=400, resp_msg="일치하는 가든이 없습니다.")
             
-            # 책 개수 가져오기
-            garden_book_instance_count = len(
-                session.query(Book)
-                .filter(
-                    Book.garden_no == payload['garden_no'],
-                    Book.user_no == user_instance.user_no,
+            # 찜하기는 제한이 없고, 가든에 담는 경우만 가든 전체 30권 제한을 적용
+            garden_book_instance_count = 0
+            if payload['garden_no'] is not None:
+                garden_book_instance_count = len(
+                    session.query(Book)
+                    .filter(Book.garden_no == payload['garden_no'])
+                    .all()
                 )
-                .all()
-            )
             
             if garden_book_instance_count < 30 :
                 # 새로운 책 객체 생성
