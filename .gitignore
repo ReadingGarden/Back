@@ -1,6 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,django,venv
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,django,venv
 
+/images
+dokseogarden-68c26-firebase-adminsdk-5aa4b-a671600178.json
+
 ### Django ###
 *.log
 *.pot
