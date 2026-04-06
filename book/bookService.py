@@ -176,7 +176,14 @@ class BookService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 가든이 없습니다.")
             
             # 책 개수 가져오기
-            garden_book_instance_count = len(session.query(Book).filter(Book.garden_no == payload['garden_no']).all())
+            garden_book_instance_count = len(
+                session.query(Book)
+                .filter(
+                    Book.garden_no == payload['garden_no'],
+                    Book.user_no == user_instance.user_no,
+                )
+                .all()
+            )
             
             if garden_book_instance_count < 30 :
                 # 새로운 책 객체 생성
