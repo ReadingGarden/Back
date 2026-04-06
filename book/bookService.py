@@ -490,16 +490,23 @@ class BookService:
                 ]
 
             # 메모 리스트
-            memo_instance = session.query(Memo).filter(Memo.book_no == book.book_no).order_by(Memo.memo_like.desc(), Memo.memo_created_at.desc()).all()
+            memo_instance = (
+                session.query(Memo, MemoImage)
+                .outerjoin(MemoImage, MemoImage.memo_no == Memo.id)
+                .filter(Memo.book_no == book.book_no)
+                .order_by(Memo.memo_like.desc(), Memo.memo_created_at.desc())
+                .all()
+            )
             result['memo_list'] = [
                 {
                     'id': memo.id,
                     'memo_content': memo.memo_content,
                     # 'memo_quote': memo.memo_quote,
                     'memo_like': memo.memo_like,
+                    'image_url': memo_image.image_url if memo_image else None,
                     'memo_created_at': memo.memo_created_at
                 }
-                for memo in memo_instance
+                for memo, memo_image in memo_instance
             ]
 
             
