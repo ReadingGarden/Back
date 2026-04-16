@@ -62,6 +62,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '.ap-northeast-2.compute.amazonaws.com',
     '43.203.248.188',
+    'readinggarden.duckdns.org',
     '192.168.0.16',
     '172.30.1.41'
 ]

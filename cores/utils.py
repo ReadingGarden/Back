@@ -35,7 +35,7 @@ def session_wrapper(func):
             raise e
         except Exception as e:
             session.rollback()
-            return HttpResp(Resp_code=500, resp_msg=str(e))
+            return HttpResp(resp_code=500, resp_msg=str(e))
         finally:
             session.close()
         
