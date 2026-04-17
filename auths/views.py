@@ -37,6 +37,7 @@ class UserPasswordAuthSchema(Schema, BaseModel):
 class UpdateUserSchema(Schema, BaseModel):
     user_nick: str = Field(None, alias="user_nick")
     user_image: str = Field(None, alias="user_image")
+    user_fcm: str = Field(None, alias="user_fcm")
 
 class UpdateUserPasswordSchema(Schema, BaseModel):
     user_email: str = Field(None, alias="user_email")

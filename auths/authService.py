@@ -528,10 +528,12 @@ class AuthService:
                 return HttpResp(resp_code=400, resp_msg="일치하는 사용자 정보가 없습니다.")
             
             # db에 프로필 update
-            if (payload['user_nick']):
+            if payload['user_nick'] is not None:
                 user_instance.user_nick = payload['user_nick']
-            else:
+            if payload['user_image'] is not None:
                 user_instance.user_image = payload['user_image']
+            if payload['user_fcm'] is not None:
+                user_instance.user_fcm = payload['user_fcm']
 
             session.add(user_instance)
             session.commit()
